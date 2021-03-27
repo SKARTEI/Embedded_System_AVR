@@ -1,0 +1,9 @@
+#include <mega128.h>
+
+void main()
+{
+    DDRC = 0xFF;
+    
+    PORTC = 0x54;
+    while(1);
+}

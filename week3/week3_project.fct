@@ -1,0 +1,2 @@
+main DSTACK_USAGE:0 DSTACK_LEVEL:0 FILE:"self_make.c" LINE:6
+seg_calculate DSTACK_USAGE:16 DSTACK_LEVEL:16 FILE:"self_make.c" LINE:21

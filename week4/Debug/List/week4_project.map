@@ -1,0 +1,25 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+num                                                                               R4,R5        2
+timer_cnt                                                                         R6,R7        2
+cal                                                                               R8,R9        2
+led                                                                               R10,R11      2
+cal_memo                                                                          R12,R13      2
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+main                                                                              0x00088     23
+SEG_base3                                                                         0x0009F     19
+SEG_fail3                                                                         0x000D3     43
+time0                                                                             0x000FE     32
+sw1_on                                                                            0x0011E     62

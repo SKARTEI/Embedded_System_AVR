@@ -1,0 +1,6 @@
+VERSION:3 SOURCE_TIMESTAMP:527608C2
+NODE:I LEVEL:0 LINE:1 "D:\a_semester3_1\microprocessor\setup_file\cvavreval-3.28\inc\mega128.h"
+NODE:I LEVEL:0 LINE:2 "D:\a_semester3_1\microprocessor\setup_file\cvavreval-3.28\inc\delay.h"
+NODE:C LEVEL:0 LINE:3 "seg_pat -> FLASH"
+NODE:F LEVEL:0 LINE:6 "main(void)"
+NODE:F LEVEL:0 LINE:21 "seg_calculate(int x)"
