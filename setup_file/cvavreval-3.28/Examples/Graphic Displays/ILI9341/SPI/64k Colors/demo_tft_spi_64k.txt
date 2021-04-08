@@ -1,0 +1,46 @@
+Ilitek ILI9341 Color TFT LCD controller demo
+(C) Copyright 2011-2014 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+This program can't be compiled with the Evaluation or
+Standard versions of CodeVisionAVR, because the
+glcd_ili9341.lib file is supplied only with the
+Advanced license.
+In this case you can program the ATxmega128A1 FLASH with
+the contents of the
+\EXAMPLES\Graphic LCD\ILI9341\SPI\64k Colors\Exe\demo_tft_spi_64k.hex
+file.
+
+The demo is designed to run on the Atmel XMEGA-A1 Xplained
+development board with an ATxmega128A1
+chip using the internal 32 MHz oscillator
+as clock source.
+
+A type TM022HDH26 240x320 2.2" TFT LCD module from
+SHANGHAI TIANMA MICRO-ELECTRONICS, mounted on
+an addapter board, is used for the purpose of this demo.
+It can be replaced with other similar modules with
+the ILI9341 controller.
+
+In this demo the controller is operated in 320x240
+landscape 64k color mode, using the SPI peripheral
+on PORTD.
+
+The TFT LCD module connections are:
+/RST - PORTD bit 2
+RS (D/C) - PORTD bit 3
+/CS  - PORTD bit 4
+SDI  - PORTD bit 5
+SDO  - PORTD bit 6
+SCL  - PORTD bit 7
+
+Backlight connection:
+LED A - connected to +3.3V using a 10 ohm resistor
+
+Power supply connections:
+GND   - GND
+VCC  - +3.3V (The 3.3V internal regulator on the module must 
+              be disabled by shorting jumper JP1)
+
+The connections can be modified by accessing the
+Project|Configure|C Compiler|Libraries|Graphic LCD menu.

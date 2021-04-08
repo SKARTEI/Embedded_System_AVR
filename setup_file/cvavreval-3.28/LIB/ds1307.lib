@@ -1,0 +1,101 @@
+/*
+  CodeVisionAVR V2.05.1+ C Compiler
+  (C) 1998-2011 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Maxim/Dallas Semiconductors DS1307 Real Time Clock
+  functions using software bit-banged I2C bus
+  communication, V1.1
+*/
+
+// V1.1 09022011_1 - added week_day in set_date and get_date functions
+//                 - DS1307 doesn't support repeated START condition
+
+#include <bcd.h>
+#include <i2c.h>
+
+unsigned char rtc_read(unsigned char address)
+{
+unsigned char data;
+i2c_start();
+i2c_write(0xd0);
+i2c_write(address);
+i2c_stop(); // 09022011_1
+i2c_start();
+i2c_write(0xd1);
+data=i2c_read(0);
+i2c_stop();
+return data;
+}
+
+void rtc_write(unsigned char address,unsigned char data)
+{
+i2c_start();
+i2c_write(0xd0);
+i2c_write(address);
+i2c_write(data);
+i2c_stop();
+}
+
+void rtc_init(unsigned char rs,unsigned char sqwe,unsigned char out)
+{
+rs&=3;
+if (sqwe) rs|=0x10;
+if (out) rs|=0x80;
+i2c_start();
+i2c_write(0xd0);
+i2c_write(7);
+i2c_write(rs);
+i2c_stop();
+}
+
+void rtc_get_time(unsigned char *hour,unsigned char *min,unsigned char *sec)
+{
+i2c_start();
+i2c_write(0xd0);
+i2c_write(0);
+i2c_stop(); // 09022011_1
+i2c_start();
+i2c_write(0xd1);
+*sec=bcd2bin(i2c_read(1));
+*min=bcd2bin(i2c_read(1));
+*hour=bcd2bin(i2c_read(0));
+i2c_stop();
+}
+
+void rtc_set_time(unsigned char hour,unsigned char min,unsigned char sec)
+{
+i2c_start();
+i2c_write(0xd0);
+i2c_write(0);
+i2c_write(bin2bcd(sec));
+i2c_write(bin2bcd(min));
+i2c_write(bin2bcd(hour));
+i2c_stop();
+}
+
+void rtc_get_date(unsigned char *week_day,unsigned char *day,unsigned char *month,unsigned char *year)
+{
+i2c_start();
+i2c_write(0xd0);
+i2c_write(3); // 09022011_1
+i2c_stop(); // 09022011_1
+i2c_start();
+i2c_write(0xd1);
+*week_day=i2c_read(1); // 09022011_1
+*day=bcd2bin(i2c_read(1));
+*month=bcd2bin(i2c_read(1));
+*year=bcd2bin(i2c_read(0));
+i2c_stop();
+}
+
+void rtc_set_date(unsigned char week_day,unsigned char day,unsigned char month,unsigned char year)
+{
+i2c_start();
+i2c_write(0xd0);
+i2c_write(3); // 09022011_1
+i2c_write(week_day); // 09022011_1
+i2c_write(bin2bcd(day));
+i2c_write(bin2bcd(month));
+i2c_write(bin2bcd(year));
+i2c_stop();
+}

@@ -1,0 +1,104 @@
+/*
+  CodeVisionAVR C Compiler
+  (C) 1998-2008 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Dallas Semiconductor DS2433 1 Wire bus EEPROM functions
+*/
+
+#include <delay.h>
+#include <1wire.h>
+
+// selects a specific DS2433 on the bus
+// if romcode is NULL then only one 1 Wire device can be used
+unsigned char ds2433_select(unsigned char *romcode)
+{
+unsigned char i;
+if (!w1_init()) return 0;
+if (romcode)
+   {
+   w1_write(0x55);
+   for (i=0;i<8;i++) w1_write(*romcode++);
+   }
+else return w1_write(0xCC);
+}
+
+// read a block of size bytes starting from memory address addr
+// and stores it at dest
+// returns 1 if succesful, 0 if not
+unsigned char ds2433_read_block(unsigned char *romcode,
+unsigned char *dest,unsigned int addr,unsigned int size)
+{
+if (!ds2433_select(romcode)) return 0;
+w1_write(0xF0);
+if (!w1_write(*(unsigned char *) &addr)) return 0;
+if (!w1_write(*((unsigned char *) &addr+1))) return 0;
+while (size--) *dest++=w1_read();
+return 1;
+}
+
+// read a byte from memory address addr and stores it at data
+// returns 1 if succesful, 0 if not
+unsigned char ds2433_read(unsigned char *romcode,
+unsigned int addr,unsigned char *data)
+{
+return ds2433_read_block(romcode,data,addr,1);
+}
+
+// write a block of size bytes, located at source,
+// starting from memory address addr
+// returns 1 if succesful, 0 if not
+unsigned char ds2433_write_block(unsigned char *romcode,
+unsigned char *source,unsigned int addr,unsigned int size)
+{
+unsigned char al,ah,es,i;
+unsigned char *p;
+while (size)
+      {
+      // write data to the scratchpad
+      if (!ds2433_select(romcode)) return 0;
+      w1_write(0x0F);
+      w1_write(al=*(unsigned char *) &addr);
+      w1_write(ah=*((unsigned char *) &addr+1));
+      p=source;
+      // write a page
+      while (1)
+            {
+            w1_write(*source);
+            es=(unsigned char) addr & 0x1F;
+            ++addr;
+            ++source;
+            --size;
+            // test if the scratchpad is full
+            // or the block is finished
+            if ((es==0x1F) || (size==0))
+               {
+               // verify scratchpad data
+               if (!ds2433_select(romcode)) return 0;
+               w1_write(0xAA);
+               if (al!=w1_read()) return 0;
+               if (ah!=w1_read()) return 0;
+               i=w1_read();
+               if (((i & 0x1F)!=es) || (i & 0xA0)) return 0;
+               for (i=(al & 0x1F);i<=es;i++)
+                   if (w1_read()!=*p++) return 0;
+               // copy the scratchpad to EEPROM
+               if (!ds2433_select(romcode)) return 0;
+               w1_write(0x55);
+               w1_write(al);
+               w1_write(ah);
+               w1_write(es);
+               delay_ms(5);
+               break;
+               };
+            };
+      };
+return 1;
+}
+
+// write the byte data at memory address addr
+// returns 1 if succesful, 0 if not
+unsigned char ds2433_write(unsigned char *romcode,
+unsigned int addr,unsigned char data)
+{
+return ds2433_write_block(romcode,&data,addr,1);
+}

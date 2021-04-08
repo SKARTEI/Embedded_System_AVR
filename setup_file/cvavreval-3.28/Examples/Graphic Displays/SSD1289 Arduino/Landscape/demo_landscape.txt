@@ -1,0 +1,68 @@
+Solomon Systech SSD1289 Color TFT LCD controller demo
+(C) Copyright 2011-2014 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+This program can't be compiled with the Evaluation or
+Standard versions of CodeVisionAVR,
+because the glcd_ssd1289.lib file is supplied only with
+the Advanced license.
+In this case you can program the ATmega2560 FLASH with
+the contents of the
+\EXAMPLES\Graphic LCD\SSD1289 Arduino Landscape\Exe\demo_landscape.hex
+file.
+
+The demo is designed to run on an Arduino Mega2560
+development board with an ATmega2560 chip using a
+16 MHz crystal oscillator as clock source.
+
+The SSD1289 TFT controller is used in an 8-bit bus
+connection, 64k color mode, in landscape 320x240
+configuration.
+
+This mode is supported only by CodeVisionAVR V3.15
+or later compilers.
+
+A "3.2" TFT Arduino TFT LCD Shield Rev. B" from:
+
+http://www.uctronics.com/32-tft-lcd-shield-touch-panel-tf-reader-for-arduino-p-1111.html
+
+is used for the purpose of this demo.
+
+VERY IMPORTANT:
+- Due to a design flaw in the Arduino Mega board,
+you must cut the traces and insert two 10k SMD
+resistors between the ATmega8U2 RXD (PORTD bit 3),
+respectively TXD (PORTD bit 2), signals and the RN4B,
+respectively RN4A, 1k resistors that lead to the
+ATmega2560 PORTE bit 0, respectively PORTE bit 1 signals.
+This way the total resistance between ATmega2560 PORTE bit 0,
+respectively bit 1, and ATmega8U2 PORTD bit 3,
+respectively bit 2, will be 11k.
+Failure to do so, will result in the glcd_getpixel
+and glcd_floodfill functions not working properly
+with this TFT LCD shield.
+- The DIP switches 1 and 2 on the TFT shield must be
+set in the ON position.
+
+The TFT LCD shield connections to the Arduino Mega2560 are:
+D0 (TFT DB0) - PORTE bit 0
+D1 (TFT DB1) - PORTE bit 1
+D2 (TFT DB2) - PORTE bit 4
+D3 (TFT DB3) - PORTE bit 5
+D4 (TFT DB4) - PORTG bit 5
+D5 (TFT DB5) - PORTE bit 3
+D6 (TFT DB6) - PORTH bit 3
+D7 (TFT DB7) - PORTH bit 4
+
+A0 (TFT /CS) - PORTF bit 0
+A1 (TFT D/C) - PORTF bit 1
+A2 (TFT /WR) - PORTF bit 2
+A3 (TFT /RD) - PORTF bit 3
+/RST         - Arduino /RESET
+
+GND   - Arduino Mega2560 GND
++5V   - Arduino Mega2560 +5V
++3.3V - Arduino Mega2560 +3.3V
+
+The connections can be modified by accessing the
+Project|Configure|C Compiler|Libraries|Graphic LCD menu.

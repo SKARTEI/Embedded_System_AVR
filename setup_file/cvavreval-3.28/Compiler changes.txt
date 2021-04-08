@@ -1,0 +1,94 @@
+Welcome to the CodeVisionAVR C Compiler V3 and the CodeWizardAVR Automatic Program Generator
+
+1. New features/changes in CodeVisionAVR V3, not available in old V1.25.x compilers:
+1.1 Compiler:
+- ANSI C compatible C front-end
+- the bool data type was added (stdbool.h)
+- the @ operator can now be used with variables located in EEPROM too
+- the & unary operator can now be applied to I/O registers declared using the sfrb and sfrw keywords.
+  It will return a pointer to the RAM address where these registers are mapped.
+- there is no need to specify the flash or eeprom memory attribute during structure or union type definition.
+  Therefore the  same structure or union data type can be easily located in any memory area during
+  variable declaration.
+- the compiler now makes distinction between the const type qualifier and the flash memory attribute.
+  In order to maintain compatibility with V1.25.x projects, 
+  the Project|Configure|C Compiler|Code Generation|Store Global Constants in FLASH Memory must be checked. 
+  If this option is not checked, identifiers declared with the 'const' type qualifier will be 
+  placed in RAM.
+- the Code Information tab, present in the Navigator after the first Build, displays detailed information
+  regarding defined data types, preprocessor macros, function and variables declarations, 
+  included header files, memory and register allocation
+- the abs, cabs, labs and fabs functions were moved from the math.h header to the stdlib.h header
+- the preprocessor does not use the old 'funcused' directive, when it is found it is always evaluated to 1
+- added the #message preprocessor directive
+- improved error and warning checking
+- improved linker: only the modified C source files are compiled when the Project|Build command is executed
+- improved COFF object file generator
+- improved code optimizer
+- enhanced libraries, including MMC/SD/SD HC FLASH Memory Card and FAT support
+- I/O registers bits definitions were added to the device header files.
+  For projects created with prior versions, these definitions are not enabled by default.
+  In order to enable them the Project|Configure|C Compiler|Code Generation|Preprocessor|Include I/O 
+  Registers Bits Definitions option must be activated.
+  For newly created projects, this option is enabled by default. 
+- in order to eliminate naming conflicts with I/O registers bits definitions, the names of the
+  SPCR0, SPDR0, SPSR0 registers were changed to SPCR, SPDR, SPSR in the following
+  header files: mega164.h, mega324.h, mega644.h, mega644p.h.
+- in order to eliminate naming conflicts with I/O registers bits definitions, the names of the
+  PCINT0, PCINT1, PCINT2, PCINT3 interrupt vectors were changed to
+  PC_INT0, PC_INT1, PC_INT2, PC_INT3  in the following header files:
+  90usb1286.h, 90usb1287.h, 90usb646.h, 90usb647.h, 90usb162.h, 90usb162.h,
+  mega1280.h, mega1281.h, mega2560.h, mega2561.h, mega640.h, mega1284p.h,
+  mega162.h, mega164.h, mega165.h, mega168.h, mega168p.h, mega169.h,
+  mega324.h, mega325.h, mega325p.h, mega3250.h, mega3250p.h, mega328p.h,
+  mega329.h, mega329p.h, mega3290.h, mega3290p.h, mega406.h,
+  mega48.h, mega48p.h, mega644.h, mega644p.h, mega645.h, mega6450.h,
+  mega649.h, mega6490.h, mega88.h, mega88p.h,
+  tiny10.h, tiny13.h, tiny24.h, tiny25.h, tiny44.h, tiny45.h, tiny48.h,
+  tiny84.h, tiny 85.h, tiny88.h, tiny261.h, tiny461.h, tiny861.h, tiny2313.h.
+  If these interrupt vectors are used in your programs, their names must be updated.
+- in order to eliminate naming conflicts with I/O registers bits definitions, the names of the
+  INT0...INT7 interrupt vectors were changed to EXT_INT0...EXT_INT7
+  in the following header files: mega1280.h, mega1281.h, mega2560.h, mega2561.h,
+  mega640.h, mega1284p.h, mega164.h, mega324.h, mega644.h, mega644p.h.
+  If these interrupt vectors are used in your programs, their names must be updated.
+- removed the limitation: when a literal char string enclosed between quotes,
+  is passed as an argument to a function parameter of pointer to char,
+  the pointer now can point to any memory type: RAM, EEPROM or FLASH, not only FLASH like in previous
+  versions.
+  The CodeVisionAVR C Compiler Reference|Constants Help topic and User Manual chapter were updated to
+  reflect this change.
+
+1.2 IDE:
+- CodeVisionAVR extension for Atmel Studio 6.2 and 7
+- completely redesigned text Editor with improved syntax highlighting for both C and AVR assembly
+- added function parameters and global structure/union members auto complete
+- improved code folding
+- code folding state can be saved and restored
+- bookmarks state can be saved and restored
+- added automatic matching brace highlighting when the user places the cursor before the brace
+- added automatic file saving at specified time interval
+- the Code Navigator was redesigned and displays project information in a more logical way
+- an additional Code Information tab is present after a project build. It displays detailed information about the included 
+  header files, preprocessor macro definitions, type definitions, global/static variable declarations, memory allocation and 
+  function definitions.
+- added the Functions Call Tree tab in the Navigator
+- the new Project|Configure|Files|Output Directories allows to specify in which directories the files generated by the 
+  compiler/linker will be placed.
+- improved toolbar
+
+1.3 CodeWizardAVR:
+- Generates code using symbolic names for peripheral configuration registers' bits.
+- Improved user interface.
+
+It is important to note that in CodeVisionAVR V3 the .asm, .hex, .eep, .cof files created by the compiler have the name of 
+the project .prj file.
+
+
+2. New ATxmega chips support in CodeVisionAVR
+
+- the Standard C I/O Functions use by default the USARTC0. This can be changed by defining the _ATXMEGA_USART_ macro
+  as described in the corresponding Help topic.
+- the SPI functions use by default the SPIC controller on PORTC. This can be changed by defining the _ATXMEGA_SPI_
+  and _ATXMEGA_SPI_PORT_ preprocessor macros as described in the corresponding Help topic.  
+- the RTC functions do not yet support the ATxmega chips.

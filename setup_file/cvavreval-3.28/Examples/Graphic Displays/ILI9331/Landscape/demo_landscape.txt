@@ -1,0 +1,62 @@
+Ilitek ILI9331 Color TFT LCD controller demo
+(C) Copyright 2011-2016 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+This program can't be compiled with the Evaluation or
+Standard versions of CodeVisionAVR, because the
+glcd_ili9331.lib file is supplied only with the
+Advanced license.
+In this case you can program the ATxmega128A1U FLASH with
+the contents of the
+\EXAMPLES\Graphic Displays\ILI9331\Landscape\Exe\demo_landscape.hex
+file.
+
+The demo is designed to run on the STK600
+development board with an ATxmega128A1U
+chip using the internal 32 MHz oscillator
+as clock source.
+
+A 240x320 2.8" TFT LCD module is used for
+the purpose of this demo.
+It can be replaced with other similar modules with
+the ILI9331 controller.
+
+In this demo the controller is operated in
+landscape 320x240 mode, with 64k colours.
+
+The TFT LCD module connections are:
+LCD_D0  - PORTC bit 0
+LCD_D1  - PORTC bit 1
+LCD_D2  - PORTC bit 2
+LCD_D3  - PORTC bit 3
+LCD_D4  - PORTC bit 4
+LCD_D5  - PORTC bit 5
+LCD_D6  - PORTC bit 6
+LCD_D7  - PORTC bit 7
+
+LCD_D8  - PORTE bit 0
+LCD_D9  - PORTE bit 1
+LCD_D10 - PORTE bit 2
+LCD_D11 - PORTE bit 3
+LCD_D12 - PORTE bit 4
+LCD_D13 - PORTE bit 5
+LCD_D14 - PORTE bit 6
+LCD_D15 - PORTE bit 7
+
+LCD_CS  - PORTF bit 0
+LCD_RS  - PORTF bit 1
+LCD_RD  - PORTF bit 2
+LCD_WR  - PORTF bit 3
+LCD_RST - PORTF bit 4
+
+B_EN    - PORTF bit 5 Backlight control
+
+Power supply connections:
+GND     - GND
+VCC     - +3.3V
+
+If you are using a different LCD module,
+please use the connections from the module datasheet.
+
+The connections can be modified by accessing the
+Project|Configure|C Compiler|Libraries|Graphic Display menu.

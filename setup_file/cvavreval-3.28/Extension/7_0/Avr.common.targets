@@ -1,0 +1,30 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+    <BuildDependsOn>
+      PreBuildEvent;
+      CoreBuild;
+      PostBuildEvent
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+
+  <PropertyGroup>
+    <RebuildDependsOn>
+      PreBuildEvent;
+      CoreRebuild;
+      PostBuildEvent
+    </RebuildDependsOn>
+  </PropertyGroup>
+  <Target Name="ReBuild" DependsOnTargets="$(RebuildDependsOn)" />
+  <Target
+    Name="PreBuildEvent"
+    Condition="'$(PreBuildEvent)'!=''">
+    <Exec WorkingDirectory="$(OutputDirectory)" Command="$(PreBuildEvent)" />
+  </Target>
+  <Target
+    Name="PostBuildEvent"
+    Condition="'$(PostBuildEvent)' != ''">
+    <Exec WorkingDirectory="$(OutputDirectory)" Command="$(PostBuildEvent)" />
+  </Target>
+
+</Project>

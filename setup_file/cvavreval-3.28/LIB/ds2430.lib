@@ -1,0 +1,138 @@
+/*
+  CodeVisionAVR C Compiler
+  (C) 1998-2008 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Dallas Semiconductor DS2430 1 Wire bus EEPROM functions
+*/
+
+#include <delay.h>
+#include <1wire.h>
+
+// selects a specific DS2430 on the bus
+// if romcode is NULL then only one 1 Wire device can be used
+unsigned char ds2430_select(unsigned char *romcode)
+{
+unsigned char i;
+if (!w1_init()) return 0;
+if (romcode)
+   {
+   w1_write(0x55);
+   for (i=0;i<8;i++) w1_write(*romcode++);
+   }
+else return w1_write(0xCC);
+}
+
+// read a block of size bytes starting from memory address addr
+// and stores it at dest
+// returns 1 if succesful, 0 if not
+unsigned char ds2430_read_block(unsigned char *romcode,
+unsigned char *dest,unsigned char addr,unsigned char size)
+{
+// read EEPROM contents to scratchpad and
+// read the scratchpad contents
+if (!ds2430_select(romcode)) return 0;
+w1_write(0xF0);
+if (!w1_write(addr)) return 0;
+while (size--) *dest++=w1_read();
+return 1;
+}
+
+// read a byte from memory address addr and stores it at data
+// returns 1 if succesful, 0 if not
+unsigned char ds2430_read(unsigned char *romcode,
+unsigned char addr,unsigned char *data)
+{
+return ds2430_read_block(romcode,data,addr,1);
+}
+
+// write a block of size bytes, located at source,
+// starting from memory address addr
+// returns 1 if succesful, 0 if not
+unsigned char ds2430_write_block(unsigned char *romcode,
+unsigned char *source,unsigned char addr,unsigned char size)
+{
+unsigned char i;
+unsigned char *p;
+p=source;
+// read EEPROM's contents to the scratchpad
+if (!ds2430_select(romcode)) return 0;
+w1_write(0xF0);
+// write new data to the scratchpad
+if (!ds2430_select(romcode)) return 0;
+w1_write(0x0F);
+w1_write(addr);
+for (i=0;i<size;i++) w1_write(*p++);
+// verify that the new data written in the scratchpad is correct
+if (!ds2430_select(romcode)) return 0;
+w1_write(0xAA);
+w1_write(addr);
+for (i=0;i<size;i++)
+    if (w1_read()!=*source++) return 0;
+// copy the scratchpad to the EEPROM
+if (!ds2430_select(romcode)) return 0;
+w1_write(0x55);
+if (!w1_write(0xA5)) return 0;
+// wait for the write process to complete
+delay_ms(15);
+return 1;
+}
+
+// write the byte data at memory address addr
+// returns 1 if succesful, 0 if not
+unsigned char ds2430_write(unsigned char *romcode,
+unsigned char addr,unsigned char data)
+{
+return ds2430_write_block(romcode,&data,addr,1);
+}
+
+// read a block of size bytes, starting from application
+// register address addr and stores it at dest
+// returns 1 if succesful, 0 if not
+unsigned char ds2430_read_appreg_block(unsigned char *romcode,
+unsigned char *dest,unsigned char addr,unsigned char size)
+{
+// reads the data from the scratchpad
+if (!ds2430_select(romcode)) return 0;
+w1_write(0xC3);
+if (!w1_write(addr)) return 0;
+while (size--) *dest++=w1_read();
+return 1;
+}
+
+// write a block of size bytes, located at source,
+// starting from application register address addr
+// returns 1 if succesful, 0 if not
+unsigned char ds2430_write_appreg_block(unsigned char *romcode,
+unsigned char *source,unsigned char addr,unsigned char size)
+{
+unsigned char i;
+unsigned char *p;
+p=source;
+// read the data from the status register
+if (!ds2430_select(romcode)) return 0;
+w1_write(0x66);
+w1_write(0);
+// check if the application register is locked
+if (w1_read()==0xFC) return 0;
+// read application register's contents to the scratchpad
+if (!ds2430_select(romcode)) return 0;
+w1_write(0xC3);
+// write new data to the scratchpad
+if (!ds2430_select(romcode)) return 0;
+w1_write(0x99);
+w1_write(addr);
+for (i=0;i<size;i++) w1_write(*p++);
+// verify that the new data in the scratchpad is correct
+if (!ds2430_select(romcode)) return 0;
+w1_write(0xC3);
+w1_write(addr);
+for (i=0;i<size;i++)
+    if (w1_read()!=*source++) return 0;
+// copy & lock the application register
+if (!ds2430_select(romcode)) return 0;
+w1_write(0x5A);
+if (!w1_write(0xA5)) return 0;
+// wait for the write process to complete
+delay_ms(15);
+return 1;
+}

@@ -1,0 +1,259 @@
+/*
+  CodeVisionAVR V3.16+ C Compiler
+  (C) 1998-2014 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Character type functions
+*/
+
+#pragma dstack_par+
+#pragma asm_function+
+
+unsigned char isalnum(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,'0'
+    brlo isalnum0
+    cpi  r31,'9'+1
+    brlo isalnum1
+    cpi  r31,'A'
+    brlo isalnum0
+    cpi  r31,'Z'+1
+    brlo isalnum1
+    cpi  r31,'a'
+    brlo isalnum0
+    cpi  r31,'z'+1
+    brlo isalnum1
+isalnum0:
+    clr  r30
+isalnum1:
+    ret
+#endasm
+}
+
+unsigned char isalpha(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,'A'
+    brlo isalpha0
+    cpi  r31,'Z'+1
+    brlo isalpha1
+    cpi  r31,'a'
+    brlo isalpha0
+    cpi  r31,'z'+1
+    brlo isalpha1
+isalpha0:
+    clr  r30
+isalpha1:
+    ret
+#endasm
+}
+
+unsigned char isascii(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,128
+    brlo isascii1
+    clr  r30
+isascii1:
+    ret
+#endasm
+}
+
+unsigned char iscntrl(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,32
+    brlo iscntrl1
+    cpi  r31,127
+    breq iscntrl1
+    clr  r30
+iscntrl1:
+    ret
+#endasm
+}
+
+unsigned char isdigit(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,'0'
+    brlo isdigit0
+    cpi  r31,'9'+1
+    brlo isdigit1
+isdigit0:
+    clr  r30
+isdigit1:
+    ret
+#endasm
+}
+
+unsigned char islower(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,'a'
+    brlo islower0
+    cpi  r31,'z'+1
+    brlo islower1
+islower0:
+    clr  r30
+islower1:
+    ret
+#endasm
+}
+
+unsigned char isprint(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,32
+    brlo isprint0
+    cpi  r31,128
+    brlo isprint1
+isprint0:
+    clr  r30
+isprint1:
+    ret
+#endasm
+}
+
+#pragma asm_function-
+
+unsigned char ispunct(char c)
+{
+isalnum(c);
+#asm
+    tst  r30
+    brne ispunct0
+#endasm
+iscntrl(c);
+#asm
+    tst  r30
+    brne ispunct0
+    ldi  r30,1
+    rjmp ispunct1
+ispunct0:
+    clr  r30
+ispunct1:
+#endasm
+}
+
+#pragma asm_function+
+
+unsigned char isspace(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,' '
+    breq isspace1
+    cpi  r31,9
+    brlo isspace0
+    cpi  r31,13+1
+    brlo isspace1
+isspace0:
+    clr  r30
+isspace1:
+    ret
+#endasm
+}
+
+unsigned char isupper(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    cpi  r31,'A'
+    brlo isupper0
+    cpi  r31,'Z'+1
+    brlo isupper1
+isupper0:
+    clr  r30
+isupper1:
+    ret
+#endasm
+}
+
+unsigned char isxdigit(char c)
+{
+#asm
+    ldi  r30,1
+    ld   r31,y+
+    subi r31,0x30
+    brcs isxdigit0
+    cpi  r31,10
+    brcs isxdigit1
+    andi r31,0x5f
+    subi r31,7
+    cpi  r31,10
+    brcs isxdigit0
+    cpi  r31,16
+    brcs isxdigit1
+isxdigit0:
+    clr  r30
+isxdigit1:
+    ret
+#endasm
+}
+
+unsigned char toint(char c)
+{
+#asm
+    ld   r30,y+
+    subi r30,'0'
+    brcs toint0
+    cpi  r30,10
+    brcs toint1
+    andi r30,0xdf
+    subi r30,7
+    cpi  r30,10
+    brcs toint0
+    cpi  r30,16
+    brcs toint1
+toint0:
+    clr  r30
+toint1:
+    ret
+#endasm
+}
+
+char tolower(char c)
+{
+#asm
+    ld   r30,y+
+    cpi  r30,'A'
+    brlo tolower1
+    cpi  r30,'Z'+1
+    brcc tolower1
+    subi r30,-32
+tolower1:
+    ret
+#endasm
+}
+
+char toupper(char c)
+{
+#asm
+    ld   r30,y+
+    cpi  r30,'a'
+    brlo toupper0
+    cpi  r30,'z'+1
+    brcc toupper0
+    subi r30,32
+toupper0:
+    ret
+#endasm
+}
+
+#pragma asm_function-

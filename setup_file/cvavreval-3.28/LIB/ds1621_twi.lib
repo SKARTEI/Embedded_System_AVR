@@ -1,0 +1,129 @@
+/*
+  CodeVisionAVR V2.05.1+ C Compiler
+  (C) 1998-2011 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Prototypes for the Maxim/Dallas Semiconductor
+  DS1621 I2C bus thermometer/thermostat
+  functions using the hardware Two Wire Interface (TWI).
+*/
+
+#define DS1621_I2C_ADDR 0x48
+
+#ifdef _ATXMEGA_DEVICE_
+// ATxmega devices
+#include <twix.h>
+
+static TWI_MASTER_INFO_t *ptwi_master;
+
+void ds1621_twi_init(TWI_MASTER_INFO_t *ptwim)
+{
+ptwi_master=ptwim;
+}
+
+unsigned char ds1621_get_status(unsigned char chip)
+{
+unsigned char status=0xac;
+twi_master_trans(ptwi_master,DS1621_I2C_ADDR | chip,&status,1,&status,1);
+return status;
+}
+
+void ds1621_set_status(unsigned char chip,unsigned char status)
+{
+unsigned char buf[2];
+buf[0]=0xac;
+buf[1]=status;
+twi_master_trans(ptwi_master,DS1621_I2C_ADDR | chip,buf,2,0,0);
+}
+
+void ds1621_set_temp(unsigned char chip,unsigned char cmd,char data)
+{
+unsigned char buf[3];
+buf[0]=cmd;
+buf[1]=data;
+buf[2]=0;
+twi_master_trans(ptwi_master,DS1621_I2C_ADDR | chip,buf,3,0,0);
+while (ds1621_get_status(chip) & 0x10);
+}
+
+void ds1621_start(unsigned char chip)
+{
+unsigned char d=0xee;
+twi_master_trans(ptwi_master,DS1621_I2C_ADDR | chip,&d,1,0,0);
+}
+
+void ds1621_stop(unsigned char chip)
+{
+unsigned char d=0x22;
+twi_master_trans(ptwi_master,DS1621_I2C_ADDR | chip,&d,1,0,0);
+}
+
+int ds1621_temperature_10(unsigned char chip)
+{
+unsigned char buf[2];
+buf[0]=0xaa;
+twi_master_trans(ptwi_master,DS1621_I2C_ADDR | chip,buf,1,buf,2);
+return (int) (((unsigned int)buf[0]<<1) | (buf[1]>>7))*5;
+}
+#else
+// non-ATxmega devices
+#include <twi.h>
+
+unsigned char ds1621_get_status(unsigned char chip)
+{
+unsigned char status=0xac;
+twi_master_trans(DS1621_I2C_ADDR | chip,&status,1,&status,1);
+return status;
+}
+
+void ds1621_set_status(unsigned char chip,unsigned char status)
+{
+unsigned char buf[2];
+buf[0]=0xac;
+buf[1]=status;
+twi_master_trans(DS1621_I2C_ADDR | chip,buf,2,0,0);
+}
+
+void ds1621_set_temp(unsigned char chip,unsigned char cmd,char data)
+{
+unsigned char buf[3];
+buf[0]=cmd;
+buf[1]=data;
+buf[2]=0;
+twi_master_trans(DS1621_I2C_ADDR | chip,buf,3,0,0);
+while (ds1621_get_status(chip) & 0x10);
+}
+
+void ds1621_start(unsigned char chip)
+{
+unsigned char d=0xee;
+twi_master_trans(DS1621_I2C_ADDR | chip,&d,1,0,0);
+}
+
+void ds1621_stop(unsigned char chip)
+{
+unsigned char d=0x22;
+twi_master_trans(DS1621_I2C_ADDR | chip,&d,1,0,0);
+}
+
+int ds1621_temperature_10(unsigned char chip)
+{
+unsigned char buf[2];
+buf[0]=0xaa;
+twi_master_trans(DS1621_I2C_ADDR | chip,buf,1,buf,2);
+return (int) (((unsigned int)buf[0]<<1) | (buf[1]>>7))*5;
+}
+#endif
+
+void ds1621_init(unsigned char chip,signed char tlow,signed char thigh,
+unsigned char pol)
+{
+//set configuration register
+ds1621_set_status(chip,8+(pol<<1));
+//set low temperature
+ds1621_set_temp(chip,0xa2,tlow);
+//set high temperature
+ds1621_set_temp(chip,0xa1,thigh);
+//start temperature conversions
+ds1621_start(chip);
+//while ((ds1621_get_status(chip) & 0x80)==0);
+}

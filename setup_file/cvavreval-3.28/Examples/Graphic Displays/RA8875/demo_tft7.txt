@@ -1,0 +1,78 @@
+RAiO Technology RA8875 Color TFT LCD controller demo
+(C) Copyright 2011-2015 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+This program can't be compiled with the Evaluation or
+Standard versions of CodeVisionAVR, because the glcd_ra8875.lib
+file is supplied only with the Advanced license.
+In this case you can program the ATxmega128A1 FLASH with
+the contents of the
+\EXAMPLES\Graphic Displays\RA8875\Release\Exe\demo_tft7.hex
+file.
+
+The demo is designed to run on the Atmel XMEGA-A1 Xplained
+development board with an ATxmega128A1
+chip using the internal 32 MHz oscillator
+as clock source.
+
+A large portion of the program (51712 bytes)
+consists of the uncompressed 186x139 64k color
+image from the file image.c
+Due to the limited number of I/O pins of the Xplained
+board, there was no possibility to connect a SD CARD
+and store this image on it, so for the purpose of this demo,
+it was located in chip's FLASH memory.
+The image was left uncompressed in order to allow fast loading.
+
+In this demo the RA8875 controller operates in 
+8 bit interface mode.
+For better performance the 16 bit operating mode can
+be selected by accessing the
+Project|Configure|C Compiler|Libraries|Graphic LCD menu.
+In this situation the DB8-DB15 signals must be also
+connected to one of the ATxmega128A1 ports.   
+
+A 800x480 7" type ER-TFTM070-5 TFT LCD module from 
+East Rising Technology Co. Ltd. (http://www.buydisplay.com) 
+is used for the purpose of this demo.
+It can be replaced with other similar modules with
+the RA8875 controller. 
+
+The TFT LCD module connections are:
+DB0  - PORTA bit 0
+DB1  - PORTA bit 1
+DB2  - PORTA bit 2
+DB3  - PORTA bit 3
+DB4  - PORTA bit 4
+DB5  - PORTA bit 5
+DB6  - PORTA bit 6
+DB7  - PORTA bit 7
+
+DB8  - GND
+DB9  - GND
+DB10 - GND
+DB11 - GND
+DB12 - GND
+DB13 - GND
+DB14 - GND
+DB15 - GND
+
+/CS    - PORTD bit 6
+RS     - PORTD bit 7
+/RD    - PORTD bit 2
+/WR    - PORTD bit 3
+/RESET - PORTD bit 4
+
+BL_CONTROL - PORTD bit 5
+
+VSS    - GND
+VDD    - +5V (Jumper JP8 on the ER-TFTM070-5 must be OPEN)
+
+The following jumpers must be set on the module:
+J6, J9, J12, J13, J15
+
+The following jumpers must be opened on the module:
+J7, J8, J10, J11, J14, J16
+
+The connections can be modified by accessing the
+Project|Configure|C Compiler|Libraries|Graphic LCD menu.

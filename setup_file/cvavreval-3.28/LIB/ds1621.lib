@@ -1,0 +1,94 @@
+/*
+  CodeVisionAVR V2.05.1+ C Compiler
+  (C) 1998-2011 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Prototypes for the Maxim/Dallas Semiconductor
+  DS1621 I2C bus thermometer/thermostat
+  functions using software bit-banged I2C bus
+  communication.
+*/
+
+#include <i2c.h>
+
+unsigned char ds1621_get_status(unsigned char chip)
+{
+unsigned char i2c_addr,status;
+i2c_addr=0x90|(chip<<1);
+i2c_start();
+i2c_write(i2c_addr);
+i2c_write(0xac);
+i2c_start();
+i2c_write(++i2c_addr);
+status=i2c_read(0);
+i2c_stop();
+return status;
+}
+
+void ds1621_set_status(unsigned char chip,unsigned char status)
+{
+i2c_start();
+i2c_write(0x90|(chip<<1));
+i2c_write(0xac);
+i2c_write(status);
+i2c_stop();
+}
+
+void ds1621_set_temp(unsigned char chip,unsigned char cmd,char data)
+{
+i2c_start();
+i2c_write(0x90|(chip<<1));
+i2c_write(cmd);
+i2c_write(data);
+i2c_write(0);
+i2c_stop();
+while (ds1621_get_status(chip) & 0x10);
+}
+
+void ds1621_start(unsigned char chip)
+{
+i2c_start();
+i2c_write(0x90|(chip<<1));
+i2c_write(0xee);
+i2c_stop();
+}
+
+void ds1621_stop(unsigned char chip)
+{
+i2c_start();
+i2c_write(0x90|(chip<<1));
+i2c_write(0x22);
+i2c_stop();
+}
+
+void ds1621_init(unsigned char chip,signed char tlow,signed char thigh,
+unsigned char pol)
+{
+//set configuration register
+ds1621_set_status(chip,8+(pol<<1));
+//set low temperature
+ds1621_set_temp(chip,0xa2,tlow);
+//set high temperature
+ds1621_set_temp(chip,0xa1,thigh);
+//start temperature conversions
+ds1621_start(chip);
+//while ((ds1621_get_status(chip) & 0x80)==0);
+}
+
+int ds1621_temperature_10(unsigned char chip)
+{
+union {
+      unsigned char b[2];
+      int w;
+      } tt;
+unsigned char i2c_addr;
+i2c_addr=0x90|(chip<<1);
+i2c_start();
+i2c_write(i2c_addr);
+i2c_write(0xaa);
+i2c_start();
+i2c_write(++i2c_addr);
+tt.b[1]=i2c_read(1);
+tt.b[0]=i2c_read(0);
+i2c_stop();
+return (tt.w>>7)*5;
+}

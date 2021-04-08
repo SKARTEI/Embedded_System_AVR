@@ -1,0 +1,81 @@
+RAiO Technology RA8875 Color TFT and
+FocalTech Systems FT5206 Capacitve Touchscreen 
+controllers demo.
+(C) Copyright 2011-2015 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+This program can't be compiled with the Evaluation or
+Standard versions of CodeVisionAVR, because the glcd_ra8875.lib
+file is supplied only with the Advanced license.
+In this case you can program the ATxmega128A1 FLASH with
+the contents of the
+\EXAMPLES\Graphic Displays\Capacitive Touchscreen\FT5206\Release\Exe\ct_demo.hex
+file.
+
+The demo is designed to run on the Atmel XMEGA-A1 Xplained
+development board with an ATxmega128A1
+chip using the internal 32 MHz oscillator
+as clock source.
+
+In this demo the RA8875 controller operates in 
+8 bit interface mode.
+For better performance the 16 bit operating mode can
+be selected by accessing the
+Project|Configure|C Compiler|Libraries|Graphic LCD menu.
+In this situation the DB8-DB15 signals must be also
+connected to one of the ATxmega128A1 ports.   
+
+A 800x480 7" type ER-TFTM070-5 TFT LCD module from 
+East Rising Technology Co. Ltd. (http://www.buydisplay.com) 
+is used for the purpose of this demo.
+It can be replaced with other similar modules with
+the RA8875 TFT and FT5206 touchscreen controllers. 
+
+The TFT display module connections are:
+DB0      - PORTA bit 0
+DB1      - PORTA bit 1
+DB2      - PORTA bit 2
+DB3      - PORTA bit 3
+DB4      - PORTA bit 4
+DB5      - PORTA bit 5
+DB6      - PORTA bit 6
+DB7      - PORTA bit 7
+
+DB8      - GND, from from PORTA header pin 9 of 
+                the Atmel XMEGA-A1 Xplained board
+DB9      - GND
+DB10     - GND
+DB11     - GND
+DB12     - GND
+DB13     - GND
+DB14     - GND
+DB15     - GND
+
+/CS      - PORTD bit 6
+RS       - PORTD bit 7
+/RD      - PORTD bit 2
+/WR      - PORTD bit 3
+/RESET   - PORTD bit 4
+
+FT5206 touchscreen controller signals:
+CTP_SDA  - PORTD bit 0, has 10k pull-up resistor on the display board
+CTP_SCL  - PORTD bit 1, has 10k pull-up resistor on the display board
+CTP_WAKE - not connected, has 10k pull-up resistor on the display board
+CTP_/RST - PORTD bit 4
+CTP_/INT - PORTD bit 5
+
+BL_CONTROL - 3.3V from PORTD header pin 10 of 
+             the Atmel XMEGA-A1 Xplained board
+VSS        - GND from PORTD header pin 9 of
+             the Atmel XMEGA-A1 Xplained board
+VDD        - +5V from external power supply 
+             (Jumper JP8 on the ER-TFTM070-5 must be OPEN)
+
+The following jumpers must be set on the module:
+J6, J9, J12, J13, J15
+
+The following jumpers must be opened on the module:
+J7, J8, J10, J11, J14, J16
+
+The TFT controller connections can be modified by accessing
+the Project|Configure|C Compiler|Libraries|Graphic LCD menu.

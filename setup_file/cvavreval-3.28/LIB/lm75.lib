@@ -1,0 +1,56 @@
+/*
+  CodeVisionAVR V2.05.1+ C Compiler
+  (C) 1998-2011 Pavel Haiduc, HP InfoTech S.R.L.
+
+  National Semiconductor LM75 temperature sensor
+  functions using software bit-banged I2C bus
+  communication.
+*/
+
+#include <i2c.h>
+
+static void lm75_set_temp(unsigned char i2c_addr,unsigned char ptr,char data)
+{
+i2c_start();
+i2c_write(i2c_addr);
+i2c_write(ptr);
+i2c_write(data);
+i2c_write(0);
+i2c_stop();
+}
+
+void lm75_init(unsigned char chip,signed char thyst,signed char tos,
+unsigned char pol)
+{
+unsigned char i2c_addr;
+i2c_addr=0x90|(chip<<1);
+//set configuration register
+i2c_start();
+i2c_write(i2c_addr);
+i2c_write(1);
+i2c_write(pol<<2);
+i2c_stop();
+//set hysterezis temperature
+lm75_set_temp(i2c_addr,2,thyst);
+//set O.S. temperature
+lm75_set_temp(i2c_addr,3,tos);
+}
+
+int lm75_temperature_10(unsigned char chip)
+{
+union {
+      unsigned char b[2];
+      int w;
+      } tt;
+unsigned char i2c_addr;
+i2c_addr=0x90|(chip<<1);
+i2c_start();
+i2c_write(i2c_addr);
+i2c_write(0);
+i2c_start();
+i2c_write(++i2c_addr);
+tt.b[1]=i2c_read(1);
+tt.b[0]=i2c_read(0);
+i2c_stop();
+return (tt.w>>7)*5;
+}

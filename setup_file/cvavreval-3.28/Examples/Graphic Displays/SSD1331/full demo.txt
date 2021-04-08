@@ -1,0 +1,47 @@
+Solomon Systech SSD1331 Graphic controller demo
+(C) Copyright 2011-2015 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+The demo is designed to run on an ATxmega128A1
+XPlained development board with chip clock of 32 MHz.
+
+An Univision Technology UG-9664HDDAG01 96x64 OLED 
+color display module was used for the purpose of this demo.
+
+The display module connections using the 8080 parallel interface are:
+DB0    - PORTA bit 0
+DB1    - PORTA bit 1
+DB2    - PORTA bit 2
+DB3    - PORTA bit 3
+DB4    - PORTA bit 4
+DB5    - PORTA bit 5
+DB6    - PORTA bit 6
+DB7    - PORTA bit 7
+
+/RES   - PORTD bit 0
+/CS    - PORTD bit 1
+D/C    - PORTD bit 2
+/RD    - PORTD bit 3
+/WR    - PORTD bit 4
+
+VSS    - GND
+VDD    - +3.3V decoupled with 10uF/16V tantalum capacitor to GND
+VDDIO  - +3.3V decoupled with 10uF/16V tantalum capacitor to GND
+VCC    - +14V decoupled with 10uF/25V tantalum capacitor to GND
+
+VCOMH  - decoupled with 4.7uF/16V tantalum capacitor to GND
+IREF   - 1.2 Mohm resistor to GND
+
+Set signals to use 8-bit 8080 parallel interface mode:
+BS0    - +3.3V
+BS1    - +3.3V
+
+Make sure to specify the correct connections in the
+Project|Configure|C Compiler|Libraries|Graphic LCD menu.
+
+This program exceeds the code size limit of the Evaluation
+version of CodeVisionAVR.
+In this case you can program the ATxmega128A1 FLASH with
+the contents of the
+\EXAMPLES\Graphic Displays\SSD1331\Release\Exe\Full Demo.hex
+file.

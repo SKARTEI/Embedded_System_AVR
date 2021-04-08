@@ -1,0 +1,2 @@
+See:
+http://eewiki.net/display/microcontroller/CAN+Example+-+ATmega32M1+-+STK600

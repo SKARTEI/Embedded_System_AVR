@@ -1,0 +1,57 @@
+/*
+  CodeVisionAVR C Compiler
+  (C) 1998-2004 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Gray code conversion functions
+*/
+
+unsigned char gray2binc(unsigned char n)
+{
+register unsigned char t,s;
+s=1;
+while (t=(n>>s))
+      {
+      n^=t;
+      s<<=1;
+      };
+return n;
+}
+
+unsigned int gray2bin(unsigned int n)
+{
+register unsigned int t,s;
+s=1;
+while (t=(n>>s))
+      {
+      n^=t;
+      s<<=1;
+      };
+return n;
+}
+
+unsigned long gray2binl(unsigned long n)
+{
+unsigned long t,s;
+s=1;
+while (t=(n>>s))
+      {
+      n^=t;
+      s<<=1;
+      };
+return n;
+}
+
+unsigned char bin2grayc(unsigned char n)
+{
+return n^n>>1;
+}
+
+unsigned int bin2gray(unsigned int n)
+{
+return n^n>>1;
+}
+
+unsigned long bin2grayl(unsigned long n)
+{
+return n^n>>1;
+}

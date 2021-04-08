@@ -1,0 +1,46 @@
+Bosch BMP180 Pressure Sensor Example
+® Copyright 2014-2015 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+CodeVisionAVR Compiler version 3.21 or later
+is required.
+
+The program is designed to be executed on an
+Arduino UNO development board, using
+an ATmega328P chip running at 16 MHz.
+
+The sensor output is transmitted serially at a
+Baud rate of 9600, 8N1 and can be displayed using
+the CodeVisionAVR IDE Tools|Terminal.
+
+The connections are:
+BMP180 shield - Arduino UNO
+SDA           - A4 (SDA) --- 3.3k resistor --- Arduino Power 3.3V
+SCL           - A5 (SCL) --- 3.3k resistor --- Arduino Power 3.3V
+GND           - GND
++3.3V         - Arduino Power 3.3V
+
+- Arduino's USB must be connected to one of the PC's USB ports.
+- The Arduino Virtual Serial Port will be now listed in the
+  Device Manager window under Ports (COM & LPT)
+- Retain the COMn number of the serial port and go to
+  the CodeVisionAVR IDE "Settings|Terminal" menu and set
+  the Terminal to use this COM port
+- In the Terminal settings specify the Baud rate: 9600
+  and disable the "Append On Reception" options
+- Start the CodeVisionAVR Terminal using the "Tools|Terminal"
+  menu and click on the "Connect" button
+- Go to "Project|Configure|After Build" and make sure that
+  the Arduino Upload COM port matches the one listed in the
+  Windows Device Manager for the Arduino UNO board
+- Do Project|Build All.
+
+Note: The BMP180 sensor is sensitive to light.
+In order to obtain correct measurements,
+please place it under a piece of black foam.
+
+The program size exceeds the code size limit of the Evaluation
+version.
+In this case the pre-compiled executable from
+\Examples\AVR\Pressure Sensors\BMP180\Release\Exe\altimeter.hex 
+can be uploaded to the Arduino board.

@@ -1,0 +1,368 @@
+/*
+  CodeVisionAVR V2.04.5 C Compiler
+  (C) 1998-2009 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Power management functions
+*/
+
+#include <io.h>
+
+#ifdef _ATXMEGA_DEVICE_
+// ATxmega chips
+
+void sleep_enable(void)
+{
+SLEEP.CTRL|=SLEEP_SEN_bm;
+}
+
+void sleep_disable(void)
+{
+SLEEP.CTRL&= ~SLEEP_SEN_bm;
+}
+
+void idle(void)
+{
+SLEEP.CTRL&= ~SLEEP_SMODE_gm;
+SLEEP.CTRL|=SLEEP_SMODE_IDLE_gc;
+#asm
+    in   r30,sreg
+    sei
+    sleep
+    out  sreg,r30
+#endasm
+}
+
+void powerdown(void)
+{
+SLEEP.CTRL&= ~SLEEP_SMODE_gm;
+SLEEP.CTRL|=SLEEP_SMODE_PDOWN_gc;
+#asm
+    in   r30,sreg
+    sei
+    sleep
+    out  sreg,r30
+#endasm
+}
+
+void powersave(void)
+{
+SLEEP.CTRL&= ~SLEEP_SMODE_gm;
+SLEEP.CTRL|=SLEEP_SMODE_PSAVE_gc;
+#asm
+    in   r30,sreg
+    sei
+    sleep
+    out  sreg,r30
+#endasm
+}
+
+void standby(void)
+{
+SLEEP.CTRL&= ~SLEEP_SMODE_gm;
+SLEEP.CTRL|=SLEEP_SMODE_STDBY_gc;
+#asm
+    in   r30,sreg
+    sei
+    sleep
+    out  sreg,r30
+#endasm
+}
+
+void extended_standby(void)
+{
+SLEEP.CTRL&= ~SLEEP_SMODE_gm;
+SLEEP.CTRL|=SLEEP_SMODE_ESTDBY_gc;
+#asm
+    in   r30,sreg
+    sei
+    sleep
+    out  sreg,r30
+#endasm
+}
+
+#else
+// AT90S, ATmega, ATtiny chips
+
+void sleep_enable(void)
+{
+#asm
+   in   r30,power_ctrl_reg
+   sbr  r30,__se_bit
+   out  power_ctrl_reg,r30
+#endasm
+}
+
+void sleep_disable(void)
+{
+#asm
+   in   r30,power_ctrl_reg
+   cbr  r30,__se_bit
+   out  power_ctrl_reg,r30
+#endasm
+}
+
+void idle(void)
+{
+#if defined _CHIP_ATMEGA161_ | defined _CHIP_ATMEGA161L_
+#asm
+   in   r30,emcucr
+   cbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   cbr  r30,0x10
+   out  mcucr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#elif defined _CHIP_ATMEGA162_ | defined _CHIP_ATMEGA162L_ | \
+defined _CHIP_ATMEGA162U_ | defined _CHIP_ATMEGA162V_ | \
+defined _CHIP_ATMEGA8515_ | defined _CHIP_ATMEGA8515L_
+#asm
+   in   r30,emcucr
+   cbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   cbr  r30,0x10
+   out  mcucr,r30
+   in   r30,mcucsr
+   cbr  r30,0x20
+   out  mcucsr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#else
+#asm
+   in   r30,power_ctrl_reg
+   cbr  r30,__sm_mask
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#endif
+}
+
+void powerdown(void)
+{
+#if defined _CHIP_ATMEGA161_ | defined _CHIP_ATMEGA161L_
+#asm
+   in   r30,emcucr
+   cbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   sbr  r30,0x10
+   out  mcucr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#elif defined _CHIP_ATMEGA8515_ | defined _CHIP_ATMEGA8515L_ | \
+defined _CHIP_ATMEGA162_ | defined _CHIP_ATMEGA162L_ | \
+defined _CHIP_ATMEGA162U_ | defined _CHIP_ATMEGA162V_
+#asm
+   in   r30,emcucr
+   cbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   sbr  r30,0x10
+   out  mcucr,r30
+   in   r30,mcucsr
+   cbr  r30,0x20
+   out  mcucsr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#elif defined _CHIP_ATTINY22_ | defined _CHIP_ATTINY22L_ | \
+defined _CHIP_AT90S2313_ | defined _CHIP_AT90S2323_ | defined _CHIP_AT90LS2323_ | \
+defined _CHIP_AT90S2323_ | defined _CHIP_AT90LS2323_ | \
+defined _CHIP_AT90S2343_ | defined _CHIP_AT90LS2343_ | \
+defined _CHIP_AT90S2333_ | defined _CHIP_AT90LS2333_ | \
+defined _CHIP_AT90S4433_ | defined _CHIP_AT90LS4433_ | \
+defined _CHIP_AT90S4414_ | defined _CHIP_AT90S8515_ | \
+defined _CHIP_AT90C8534_ | defined _CHIP_AT43USB355_
+#asm
+   in   r30,power_ctrl_reg
+   sbr  r30,__sm_mask
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#else
+#asm
+   in   r30,power_ctrl_reg
+   cbr  r30,__sm_mask
+   sbr  r30,__sm_powerdown
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#endif
+}
+
+void powersave(void)
+{
+#if defined _CHIP_AT90S4434_ | defined _CHIP_AT90LS4434_ | \
+defined _CHIP_AT90S8535_ | defined _CHIP_AT90LS8535_ | \
+defined _CHIP_ATMEGA103_ | defined _CHIP_ATMEGA603_ | \
+defined _CHIP_ATMEGA163_ | defined _CHIP_ATMEGA163L_ | \
+defined _CHIP_ATMEGA323_ | defined _CHIP_ATMEGA323L_ | \
+defined _CHIP_AT76C711_ | defined _CHIP_AT94K_ | defined _CHIP_AT94K05_
+#asm
+   in   r30,power_ctrl_reg
+   sbr  r30,__sm_mask
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#elif defined _CHIP_ATMEGA161_ | defined _CHIP_ATMEGA161L_
+#asm
+   in   r30,emcucr
+   sbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   sbr  r30,0x10
+   out  mcucr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#elif defined _CHIP_ATMEGA162_ | defined _CHIP_ATMEGA162L_ | \
+defined _CHIP_ATMEGA162U_ | defined _CHIP_ATMEGA162V_
+#asm
+   in   r30,emcucr
+   sbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   sbr  r30,0x10
+   out  mcucr,r30
+   in   r30,mcucsr
+   cbr  r30,0x20
+   out  mcucsr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#else
+#asm
+   in   r30,power_ctrl_reg
+   cbr  r30,__sm_mask
+   sbr  r30,__sm_powersave
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#endif
+}
+
+void standby(void)
+{
+#if defined _CHIP_ATMEGA162_ | defined _CHIP_ATMEGA162L_ | \
+defined _CHIP_ATMEGA162U_ | defined _CHIP_ATMEGA162V_ | \
+defined _CHIP_ATMEGA8515_ | defined _CHIP_ATMEGA8515L_
+#asm
+   in   r30,emcucr
+   cbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   sbr  r30,0x10
+   out  mcucr,r30
+   in   r30,mcucsr
+   sbr  r30,0x20
+   out  mcucsr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#elif defined _CHIP_ATTINY26_ | defined _CHIP_ATTINY26L_ | \
+defined _CHIP_ATTINY261_ | defined _CHIP_ATTINY261V_ | \
+defined _CHIP_ATTINY461_ | defined _CHIP_ATTINY461V_ | \
+defined _CHIP_ATTINY861_ | defined _CHIP_ATTINY861V_
+#asm
+   in   r30,mcucr
+   sbr  r30,__sm_standby
+   out  mcucr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#else
+#asm
+   in   r30,power_ctrl_reg
+   cbr  r30,__sm_mask
+   sbr  r30,__sm_standby
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#endif
+}
+
+void extended_standby(void)
+{
+#if defined _CHIP_ATMEGA162_ | defined _CHIP_ATMEGA162L_ | \
+defined _CHIP_ATMEGA162U_ | defined _CHIP_ATMEGA162V_
+#asm
+   in   r30,emcucr
+   sbr  r30,0x80
+   out  emcucr,r30
+   in   r30,mcucr
+   sbr  r30,0x10
+   out  mcucr,r30
+   in   r30,mcucsr
+   sbr  r30,0x20
+   out  mcucsr,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#else
+#asm
+   in   r30,power_ctrl_reg
+   sbr  r30,__sm_mask
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+#endif
+}
+
+void poweroff(void)
+{
+#asm
+   in   r30,power_ctrl_reg
+   cbr  r30,__sm_mask
+   sbr  r30,__sm_poweroff
+   out  power_ctrl_reg,r30
+   in   r30,sreg
+   sei
+   sleep
+   out  sreg,r30
+#endasm
+}
+
+#endif

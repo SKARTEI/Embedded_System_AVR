@@ -1,0 +1,65 @@
+Sitronix ST7781 Color TFT LCD controller demo
+(C) Copyright 2011-2016 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+This program can't be compiled with the Evaluation or
+Standard versions of CodeVisionAVR, because the
+glcd_st7781.lib file is supplied only with the
+Advanced license.
+In this case you can program the ATxmega128A1U FLASH with
+the contents of the
+\EXAMPLES\Graphic Displays\ST7781\Portrait\Exe\demo_portrait.hex
+file.
+
+The demo is designed to run on the STK600
+development board with an ATxmega128A1U
+chip using the internal 32 MHz oscillator
+as clock source.
+
+A 240x320 2.8" display module "TFT Lite"
+from http://www.wide.hk is used for
+the purpose of this demo.
+It can be replaced with other similar modules with
+the ST7781 controller.
+
+In this demo the controller is operated in
+landscape 320x240 mode, with 64k colours.
+
+The TFT LCD module connections are:
+D0   - PORTC bit 0
+D1   - PORTC bit 1
+D2   - PORTC bit 2
+D3   - PORTC bit 3
+D4   - PORTC bit 4
+D5   - PORTC bit 5
+D6   - PORTC bit 6
+D7   - PORTC bit 7
+
+D8   - PORTE bit 0
+D9   - PORTE bit 1
+D10  - PORTE bit 2
+D11  - PORTE bit 3
+D12  - PORTE bit 4
+D13  - PORTE bit 5
+D14  - PORTE bit 6
+D15  - PORTE bit 7
+
+/CS  - PORTF bit 0
+RS   - PORTF bit 1
+/RD  - PORTF bit 2
+/WR  - PORTF bit 3
+/RST - PORTF bit 4
+
+Backlight control - PORTF bit 5
+
+Power supply connections:
+GND     - GND
+VCC     - +5V 
+Note: THERE IS A 3.3V REGULATOR ON THE "TFT Lite" MODULE 
+FROM WWW.WIDE.HK, CHECK YOUR MODULE BEFORE USING
+
+If you are using a different LCD module,
+please use the connections from the module datasheet.
+
+The connections can be modified by accessing the
+Project|Configure|C Compiler|Libraries|Graphic Display menu.

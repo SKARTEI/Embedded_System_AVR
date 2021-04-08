@@ -1,0 +1,145 @@
+/*
+  CodeVisionAVR V2.05.1+ C Compiler
+  (C) 1998-2011 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Philips PCF8563 I2C bus Real Time Clock functions
+*/
+
+#include <i2c.h>
+#include <bcd.h>
+
+unsigned char rtc_read(unsigned char address)
+{
+unsigned char d;
+i2c_start();
+i2c_write(0xa2);
+i2c_write(address);
+i2c_start();
+i2c_write(0xa3);
+d=i2c_read(0);
+i2c_stop();
+return d;
+}
+
+void rtc_write(unsigned char address,unsigned char data)
+{
+i2c_start();
+i2c_write(0xa2);
+i2c_write(address);
+i2c_write(data);
+i2c_stop();
+}
+
+void rtc_stop(void)
+{
+rtc_write(0,0x20);
+}
+
+void rtc_start(void)
+{
+rtc_write(0,0);
+}
+
+void rtc_init(unsigned char ctrl2,unsigned char clkout,unsigned char timer_ctrl)
+{
+rtc_write(1,ctrl2);
+rtc_write(0xd,clkout);
+rtc_write(0xe,timer_ctrl);
+rtc_start();
+}
+
+unsigned char rtc_read_bcd(unsigned char addr,unsigned char mask)
+{
+return bcd2bin(rtc_read(addr) & mask);
+}
+
+void rtc_write_bcd(unsigned char addr,unsigned char data)
+{
+rtc_write(addr,bin2bcd(data));
+}
+
+unsigned char rtc_get_time(unsigned char *hour,unsigned char *min,unsigned char *sec)
+{
+unsigned char d;
+d=rtc_read(2);
+*sec=bcd2bin(d & 0x7f);
+if (d & 0x80) d=0; else d=1;
+*min=rtc_read_bcd(3,0x7f);
+*hour=rtc_read_bcd(4,0x3f);
+return d;
+}
+
+void rtc_set_time(unsigned char hour,unsigned char min,unsigned char sec)
+{
+rtc_stop();
+rtc_write_bcd(2,sec);
+rtc_write_bcd(3,min);
+rtc_write_bcd(4,hour);
+rtc_start();
+}
+
+void rtc_get_date(unsigned char *day,unsigned char *month,unsigned *year)
+{
+unsigned char mc;
+unsigned y=1900;
+*day=rtc_read_bcd(5,0x3f);
+mc=rtc_read(7);
+*month=bcd2bin(mc & 0x1f);
+if (mc & 0x80) y=2000;
+*year=rtc_read_bcd(8,0xff)+y;
+}
+
+void rtc_set_date(unsigned char day,unsigned char month,unsigned year)
+{
+unsigned char mc;
+mc=bin2bcd(month);
+if (year>=2000) mc|=0x80;
+rtc_stop();
+rtc_write_bcd(5,day);
+rtc_write(7,mc);
+rtc_write_bcd(8,year%100);
+rtc_start();
+}
+
+void rtc_alarm_off(void)
+{
+rtc_write(9,rtc_read(9) | 0x80);
+rtc_write(10,rtc_read(10) | 0x80);
+rtc_write(11,rtc_read(11) | 0x80);
+rtc_write(12,0x80);
+}
+
+void rtc_alarm_on(void)
+{
+unsigned char d;
+rtc_write(9,rtc_read(9) & 0x7f);
+rtc_write(10,rtc_read(10) & 0x3f);
+d=rtc_read(11) & 0x3f;
+if (d==0) d=0x80;
+rtc_write(11,d);
+}
+
+void rtc_write_alarm(unsigned char addr,unsigned char data)
+{
+rtc_write(addr,bin2bcd(data) | 0x80);
+}
+
+void rtc_set_alarm(unsigned char day,unsigned char hour,unsigned char min)
+{
+rtc_write_alarm(9,min);
+rtc_write_alarm(10,hour);
+rtc_write_alarm(11,day);
+rtc_write(12,0x80);
+}
+
+void rtc_get_alarm(unsigned char *day,unsigned char *hour,unsigned char *min)
+{
+*min=rtc_read_bcd(9,0x7f);
+*hour=rtc_read_bcd(10,0x3f);
+*day=rtc_read_bcd(11,0x3f);
+}
+
+void rtc_set_timer(unsigned char val)
+{
+rtc_write(0xf,val);
+}

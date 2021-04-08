@@ -1,0 +1,1271 @@
+/* CodeVisionAVR C Compiler V3.16+
+   Standard library functions
+
+   (C) 1998-2014 Pavel Haiduc, HP InfoTech S.R.L.
+*/
+
+#if __CODEVISIONAVR__ < 3160
+#error stdlib.lib requires to be used with CodeVisionAVR V3.16 or later
+#endif
+
+#include <ctype.h>
+#include <math.h>
+#include <string.h>
+
+#define REG30 (*(unsigned char *) 30)
+
+#pragma dstack_par+
+
+#pragma asm_function+
+unsigned int abs(int x)
+{
+#ifdef _AVR8L_CORE_
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    subi r30,0
+    sbci r31,0
+    brpl __abs0
+    com  r30
+    com  r31
+    subi r30,0xff
+    sbci r31,0xff
+__abs0:
+    ret
+#endasm
+#else
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    sbiw r30,0
+    brpl __abs0
+    com  r30
+    com  r31
+    adiw r30,1
+__abs0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+unsigned char cabs(signed char x)
+{
+#asm
+    ld   r30,y+
+    cpi  r30,0
+    brpl __cabs0
+    neg  r30
+__cabs0:
+    ret
+#endasm
+}
+#pragma asm_function-
+
+#pragma asm_function+
+unsigned long labs(long x)
+{
+#ifdef _AVR8L_CORE_
+#asm
+    ld    r30,y+
+    ld    r31,y+
+    ld    r22,y+
+    ld    r23,y+
+    subi  r30,0
+    sbci  r31,0
+    sbci  r22,0
+    sbci  r23,0
+    brpl  __labs0
+    com   r30
+    com   r31
+    com   r22
+    com   r23
+    subi  r30,0xff
+    sbci  r31,0xff
+    sbci  r22,0xff
+    sbci  r23,0xff
+__labs0:
+    ret
+#endasm
+#else
+#asm
+    ld    r30,y+
+    ld    r31,y+
+    ld    r22,y+
+    ld    r23,y+
+    sbiw  r30,0
+    sbci  r22,0
+    sbci  r23,0
+    brpl  __labs0
+    com   r30
+    com   r31
+    com   r22
+    com   r23
+    clr   r0
+    adiw  r30,1
+    adc   r22,r0
+    adc   r23,r0
+__labs0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+float fabs(float x)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    cbr  r23,0x80
+    ret
+#endasm
+}
+#pragma asm_function-
+
+#ifdef _MODEL_TINY_
+#pragma asm_function+
+int atoi(char *str)
+{
+#asm
+    clr  r27
+    ld   r26,y
+__atoi0:
+    ld   r30,x
+    mov  r24,r26
+#endasm
+   	isspace(REG30);
+#ifdef _AVR8L_CORE_
+#asm
+    mov  r26,r24
+    tst  r30
+    breq __atoi1
+    inc  r26
+    rjmp __atoi0
+__atoi1:
+    clt
+    ld   r30,x
+    cpi  r30,'-'
+    brne __atoi2
+    set
+    rjmp __atoi3
+   	__atoi2:
+    cpi  r30,'+'
+    brne __atoi4
+__atoi3:
+    inc  r26
+    __atoi4:
+    clr  r22
+    clr  r23
+__atoi5:
+    ld   r30,x
+    mov  r24,r26
+#endasm
+   	isdigit(REG30);
+#asm
+    mov  r26,r24
+    tst  r30
+    breq __atoi6
+    mov  r30,r22
+    mov  r31,r23
+    lsl  r22
+    rol  r23
+    lsl  r22
+    rol  r23
+    add  r22,r30
+    adc  r23,r31
+    lsl  r22
+    rol  r23
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r22,r30
+    adc  r23,r31
+    rjmp __atoi5
+__atoi6:
+    mov  r30,r22
+    mov  r31,r23
+    brtc __atoi7
+    com  r30
+    com  r31
+    subi r30,0xff
+    sbci r31,0xff
+__atoi7:
+    subi r28,-1
+    ret
+#endasm
+#else
+#asm
+    mov  r26,r24
+    tst  r30
+    breq __atoi1
+    adiw r26,1
+    rjmp __atoi0
+__atoi1:
+    clt
+    ld   r30,x
+    cpi  r30,'-'
+    brne __atoi2
+    set
+    rjmp __atoi3
+   	__atoi2:
+    cpi  r30,'+'
+    brne __atoi4
+__atoi3:
+    adiw r26,1
+    __atoi4:
+    clr  r22
+    clr  r23
+__atoi5:
+    ld   r30,x
+    mov  r24,r26
+#endasm
+   	isdigit(REG30);
+#ifdef _ENHANCED_CORE_
+#asm
+    mov  r26,r24
+    tst  r30
+    breq __atoi6
+    movw r30,r22
+    lsl  r22
+    rol  r23
+    lsl  r22
+    rol  r23
+    add  r22,r30
+    adc  r23,r31
+    lsl  r22
+    rol  r23
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r22,r30
+    adc  r23,r31
+    rjmp __atoi5
+__atoi6:
+    movw r30,r22
+    brtc __atoi7
+    com  r30
+    com  r31
+    adiw r30,1
+__atoi7:
+    adiw r28,1
+    ret
+#endasm
+#else
+#asm
+    mov  r26,r24
+    tst  r30
+    breq __atoi6
+    mov  r30,r22
+    mov  r31,r23
+    lsl  r22
+    rol  r23
+    lsl  r22
+    rol  r23
+    add  r22,r30
+    adc  r23,r31
+    lsl  r22
+    rol  r23
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r22,r30
+    adc  r23,r31
+    rjmp __atoi5
+__atoi6:
+    mov  r30,r22
+    mov  r31,r23
+    brtc __atoi7
+    com  r30
+    com  r31
+    adiw r30,1
+__atoi7:
+    adiw r28,1
+    ret
+#endasm
+#endif
+#endif
+}
+#pragma asm_function-
+
+#else
+#pragma asm_function+
+int atoi(char *str)
+{
+#asm
+   	ldd  r27,y+1
+   	ld   r26,y
+__atoi0:
+   	ld   r30,x
+        mov  r24,r26
+#endasm
+   	isspace(REG30);
+#asm
+        mov  r26,r24
+   	tst  r30
+   	breq __atoi1
+   	adiw r26,1
+   	rjmp __atoi0
+__atoi1:
+   	clt
+   	ld   r30,x
+   	cpi  r30,'-'
+   	brne __atoi2
+   	set
+   	rjmp __atoi3
+__atoi2:
+   	cpi  r30,'+'
+   	brne __atoi4
+__atoi3:
+   	adiw r26,1
+__atoi4:
+   	clr  r22
+   	clr  r23
+__atoi5:
+   	ld   r30,x
+    mov  r24,r26
+#endasm
+   	isdigit(REG30);
+#ifdef _ENHANCED_CORE_
+#asm
+    mov  r26,r24
+   	tst  r30
+   	breq __atoi6
+   	movw r30,r22
+   	lsl  r22
+   	rol  r23
+   	lsl  r22
+   	rol  r23
+   	add  r22,r30
+   	adc  r23,r31
+   	lsl  r22
+   	rol  r23
+   	ld   r30,x+
+   	clr  r31
+   	subi r30,'0'
+   	add  r22,r30
+   	adc  r23,r31
+   	rjmp __atoi5
+__atoi6:
+   	movw r30,r22
+   	brtc __atoi7
+   	com  r30
+   	com  r31
+   	adiw r30,1
+__atoi7:
+   	adiw r28,2
+   	ret
+#endasm
+#else
+#asm
+    mov  r26,r24
+   	tst  r30
+   	breq __atoi6
+   	mov  r30,r22
+   	mov  r31,r23
+   	lsl  r22
+   	rol  r23
+   	lsl  r22
+   	rol  r23
+   	add  r22,r30
+   	adc  r23,r31
+   	lsl  r22
+   	rol  r23
+   	ld   r30,x+
+   	clr  r31
+   	subi r30,'0'
+   	add  r22,r30
+   	adc  r23,r31
+   	rjmp __atoi5
+__atoi6:
+   	mov  r30,r22
+   	mov  r31,r23
+   	brtc __atoi7
+   	com  r30
+   	com  r31
+   	adiw r30,1
+__atoi7:
+   	adiw r28,2
+   	ret
+#endasm
+#endif
+}
+#pragma asm_function-
+#endif
+
+#ifdef _MODEL_TINY_
+#pragma asm_function+
+long atol(char *str)
+{
+#asm
+    clr  r27
+    ld   r26,y
+__atol0:
+    ld   r30,x
+    push r26
+#endasm
+   	isspace(REG30);
+#ifdef _AVR8L_CORE_
+#asm
+    pop  r26
+    tst  r30
+    breq __atol1
+    inc  r26
+    rjmp __atol0
+__atol1:
+    clt
+    ld   r30,x
+    cpi  r30,'-'
+    brne __atol2
+    set
+    rjmp __atol3
+__atol2:
+    cpi  r30,'+'
+    brne __atol4
+__atol3:
+    inc  r26
+__atol4:
+    clr  r16
+    clr  r17
+    clr  r24
+    clr  r25
+__atol5:
+    ld   r30,x
+    push r26
+#endasm
+   	isdigit(REG30);
+#asm
+    pop  r26
+    tst  r30
+    breq __atol6
+    mov  r30,r16
+    mov  r31,r17
+    mov  r22,r24
+    mov  r23,r25
+    rcall __atol8
+    rcall __atol8
+    add  r16,r30
+    adc  r17,r31
+    adc  r24,r22
+    adc  r25,r23
+    rcall __atol8
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r16,r30
+    adc  r17,r31
+    adc  r24,r31
+    adc  r25,r31
+    rjmp __atol5
+__atol6:
+    mov  r30,r16
+    mov  r31,r17
+    mov  r22,r24
+    mov  r23,r25
+    brtc __atol7
+    com  r30
+    com  r31
+    com  r22
+    com  r23
+    subi r30,0xff
+    sbci r31,0xff
+    sbci r22,0xff
+    sbci r23,0xff
+__atol7:
+    subi r28,-1
+    ret
+
+__atol8:
+    lsl  r16
+    rol  r17
+    rol  r24
+    rol  r25
+    ret
+#endasm
+#else
+#asm
+    pop  r26
+    tst  r30
+    breq __atol1
+    adiw r26,1
+    rjmp __atol0
+__atol1:
+    clt
+    ld   r30,x
+    cpi  r30,'-'
+    brne __atol2
+    set
+    rjmp __atol3
+__atol2:
+    cpi  r30,'+'
+    brne __atol4
+__atol3:
+    adiw r26,1
+__atol4:
+    clr  r0
+    clr  r1
+    clr  r24
+    clr  r25
+__atol5:
+    ld   r30,x
+    push r26
+#endasm
+   	isdigit(REG30);
+#ifdef _ENHANCED_CORE_
+#asm
+    pop  r26
+    tst  r30
+    breq __atol6
+    movw r30,r0
+    movw r22,r24
+    rcall __atol8
+    rcall __atol8
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r22
+    adc  r25,r23
+    rcall __atol8
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r31
+    adc  r25,r31
+    rjmp __atol5
+__atol6:
+    movw r30,r0
+    movw r22,r24
+    brtc __atol7
+    com  r30
+    com  r31
+    com  r22
+    com  r23
+    clr  r24
+    adiw r30,1
+    adc  r22,r24
+    adc  r23,r24
+__atol7:
+    adiw r28,1
+    ret
+
+__atol8:
+    lsl  r0
+    rol  r1
+    rol  r24
+    rol  r25
+    ret
+#endasm
+#else
+#asm
+    pop  r26
+    tst  r30
+    breq __atol6
+    mov  r30,r0
+    mov  r31,r1
+    mov  r22,r24
+    mov  r23,r25
+    rcall __atol8
+    rcall __atol8
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r22
+    adc  r25,r23
+    rcall __atol8
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r31
+    adc  r25,r31
+    rjmp __atol5
+__atol6:
+    mov  r30,r0
+    mov  r31,r1
+    mov  r22,r24
+    mov  r23,r25
+    brtc __atol7
+    com  r30
+    com  r31
+    com  r22
+    com  r23
+    clr  r24
+    adiw r30,1
+    adc  r22,r24
+    adc  r23,r24
+__atol7:
+    adiw r28,1
+    ret
+
+__atol8:
+    lsl  r0
+    rol  r1
+    rol  r24
+    rol  r25
+    ret
+#endasm
+#endif
+#endif
+}
+#pragma asm_function-
+
+#else
+#pragma asm_function+
+long atol(char *str)
+{
+#asm
+    ldd  r27,y+1
+    ld   r26,y
+__atol0:
+    ld   r30,x
+    push r26
+#endasm
+   	isspace(REG30);
+#asm
+    pop  r26
+    tst  r30
+    breq __atol1
+    adiw r26,1
+    rjmp __atol0
+__atol1:
+    clt
+    ld   r30,x
+    cpi  r30,'-'
+    brne __atol2
+    set
+    rjmp __atol3
+__atol2:
+    cpi  r30,'+'
+    brne __atol4
+__atol3:
+    adiw r26,1
+__atol4:
+    clr  r0
+    clr  r1
+    clr  r24
+    clr  r25
+__atol5:
+    ld   r30,x
+    push r26
+#endasm
+   	isdigit(REG30);
+#ifdef _ENHANCED_CORE_
+#asm
+    pop  r26
+    tst  r30
+    breq __atol6
+    movw r30,r0
+    movw r22,r24
+    rcall __atol8
+    rcall __atol8
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r22
+    adc  r25,r23
+    rcall __atol8
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r31
+    adc  r25,r31
+    rjmp __atol5
+__atol6:
+    movw r30,r0
+    movw r22,r24
+    brtc __atol7
+    com  r30
+    com  r31
+    com  r22
+    com  r23
+    clr  r24
+    adiw r30,1
+    adc  r22,r24
+    adc  r23,r24
+__atol7:
+    adiw r28,2
+    ret
+
+__atol8:
+    lsl  r0
+    rol  r1
+    rol  r24
+    rol  r25
+    ret
+#endasm
+#else
+#asm
+    pop  r26
+    tst  r30
+    breq __atol6
+    mov  r30,r0
+    mov  r31,r1
+    mov  r22,r24
+    mov  r23,r25
+    rcall __atol8
+    rcall __atol8
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r22
+    adc  r25,r23
+    rcall __atol8
+    ld   r30,x+
+    clr  r31
+    subi r30,'0'
+    add  r0,r30
+    adc  r1,r31
+    adc  r24,r31
+    adc  r25,r31
+    rjmp __atol5
+__atol6:
+    mov  r30,r0
+    mov  r31,r1
+    mov  r22,r24
+    mov  r23,r25
+    brtc __atol7
+    com  r30
+    com  r31
+    com  r22
+    com  r23
+    clr  r24
+    adiw r30,1
+    adc  r22,r24
+    adc  r23,r24
+__atol7:
+    adiw r28,2
+    ret
+
+__atol8:
+    lsl  r0
+    rol  r1
+    rol  r24
+    rol  r25
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+#endif
+
+#ifdef _MODEL_TINY_
+#pragma asm_function+
+void itoa(int n,char *str)
+{
+#ifdef _AVR8L_CORE_
+#asm
+    ld   r26,y+
+    clr  r27
+    ld   r30,y+
+    ld   r31,y+
+    add  r30,r27
+    adc  r31,r27
+    brpl __itoa0
+    com  r30
+    com  r31
+    subi r30,0xff
+    sbci r31,0xff
+    ldi  r22,'-'
+    st   x+,r22
+__itoa0:
+    clt
+    ldi  r24,low(10000)
+    ldi  r25,high(10000)
+    rcall __itoa1
+    ldi  r24,low(1000)
+    ldi  r25,high(1000)
+    rcall __itoa1
+    ldi  r24,100
+    clr  r25
+    rcall __itoa1
+    ldi  r24,10
+    rcall __itoa1
+    mov  r22,r30
+    rcall __itoa5
+    clr  r22
+    st   x,r22
+    ret
+
+__itoa1:
+    clr	 r22
+__itoa2:
+    cp   r30,r24
+    cpc  r31,r25
+    brlo __itoa3
+    inc  r22
+    sub  r30,r24
+    sbc  r31,r25
+    brne __itoa2
+__itoa3:
+    tst  r22
+    brne __itoa4
+    brts __itoa5
+    ret
+__itoa4:
+    set
+__itoa5:
+    subi r22,-0x30
+    st   x+,r22
+    ret
+#endasm
+#else
+#asm
+    ld   r26,y+
+    clr  r27
+    ld   r30,y+
+    ld   r31,y+
+    adiw r30,0
+    brpl __itoa0
+    com  r30
+    com  r31
+    adiw r30,1
+    ldi  r22,'-'
+    st   x+,r22
+__itoa0:
+    clt
+    ldi  r24,low(10000)
+    ldi  r25,high(10000)
+    rcall __itoa1
+    ldi  r24,low(1000)
+    ldi  r25,high(1000)
+    rcall __itoa1
+    ldi  r24,100
+    clr  r25
+    rcall __itoa1
+    ldi  r24,10
+    rcall __itoa1
+    mov  r22,r30
+    rcall __itoa5
+    clr  r22
+    st   x,r22
+    ret
+
+__itoa1:
+    clr	 r22
+__itoa2:
+    cp   r30,r24
+    cpc  r31,r25
+    brlo __itoa3
+    inc  r22
+    sub  r30,r24
+    sbc  r31,r25
+    brne __itoa2
+__itoa3:
+    tst  r22
+    brne __itoa4
+    brts __itoa5
+    ret
+__itoa4:
+    set
+__itoa5:
+    subi r22,-0x30
+    st   x+,r22
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#else
+#pragma asm_function+
+void itoa(int n,char *str)
+{
+#asm
+    ld   r26,y+
+    ld   r27,y+
+    ld   r30,y+
+    ld   r31,y+
+    adiw r30,0
+    brpl __itoa0
+    com  r30
+    com  r31
+    adiw r30,1
+    ldi  r22,'-'
+    st   x+,r22
+__itoa0:
+    clt
+    ldi  r24,low(10000)
+    ldi  r25,high(10000)
+    rcall __itoa1
+    ldi  r24,low(1000)
+    ldi  r25,high(1000)
+    rcall __itoa1
+    ldi  r24,100
+    clr  r25
+    rcall __itoa1
+    ldi  r24,10
+    rcall __itoa1
+    mov  r22,r30
+    rcall __itoa5
+    clr  r22
+    st   x,r22
+    ret
+
+__itoa1:
+    clr	 r22
+__itoa2:
+    cp   r30,r24
+    cpc  r31,r25
+    brlo __itoa3
+    inc  r22
+    sub  r30,r24
+    sbc  r31,r25
+    brne __itoa2
+__itoa3:
+    tst  r22
+    brne __itoa4
+    brts __itoa5
+    ret
+__itoa4:
+    set
+__itoa5:
+    subi r22,-0x30
+    st   x+,r22
+    ret
+#endasm
+}
+#pragma asm_function-
+#endif
+
+#pragma dstack_par-
+
+void ltoa(long int n,char *str)
+{
+unsigned long i;
+unsigned char j,p;
+i=1000000000L;
+p=0;
+if (n<0)
+   {
+   n=-n;
+   *str++='-';
+   };
+do
+  {
+  j=(unsigned char) (n/i);
+  if (j || p || (i==1))
+     {
+     *str++=j+'0';
+     p=1;
+     }
+  n%=i;
+  i/=10L;
+  }
+while (i!=0);
+*str=0;
+}
+
+void ftoa(float n,unsigned char decimals,char *str)
+{
+float scale=0.5;
+unsigned char i,d;
+
+switch (((unsigned int *) &n)[1])
+       {
+       case 0xFFFF:
+       strcpyf(str,"-NAN");
+       return;
+
+       case 0x7FFF:
+       strcpyf(str,"NAN");
+       return;
+       };
+
+if (n<0.0) {n=-n; *str++='-';};
+if (decimals>6) decimals=6;
+i=decimals;
+while (i--) scale=scale*0.1;
+n=n+scale;
+i=0;
+scale=1.0;
+while (n>=scale)
+      {
+      scale=scale*10.0;
+      // 08032010_1
+      if (++i>38)
+         {
+         strcpyf(str,"INF");
+         return;
+         }
+      };
+if (i==0) *str++='0';
+else
+while (i--)
+	  {
+      scale=floor(0.5+scale*0.1);
+      d=(unsigned char) (n/scale);
+      *str++=d+'0';
+      n=n-scale*d;
+      };
+if (decimals==0) {*str=0; return;};
+*str++='.';
+while (decimals--)
+      {
+      n=n*10.0;
+      d=(unsigned char) n;
+      *str++=d+'0';
+      n=n-d;
+	  };
+*str=0;
+}
+
+void ftoe(float n,unsigned char decimals,char *str)
+{
+float scale=1.0;
+unsigned char i,d;
+signed char expon;
+
+switch (((unsigned int *) &n)[1])
+       {
+       case 0xFFFF:
+       strcpyf(str,"-NAN");
+       return;
+
+       case 0x7FFF:
+       strcpyf(str,"NAN");
+       return;
+       };
+
+if (decimals>6) decimals=6;
+i=decimals;
+while (i--) scale=scale*10.0;
+if (n==0.0) {expon=0; scale=scale*10.0;}
+else
+    {
+    expon=decimals;
+    if (n<0.0) {*str++='-'; n=-n;};
+    if (n>scale)
+       {
+       scale=scale*10.;
+       while (n>=scale) {n=n*0.1; ++expon;};
+       }
+    else
+       {
+       while (n<scale) {n=n*10.0; --expon;};
+       scale=scale*10.0;
+       };
+    n+=0.5;
+    if (n>=scale) {n=n*0.1; ++expon;};
+    }
+i=0;
+while (i<=decimals)
+      {
+      scale=floor(0.5+scale*0.1);
+      d=(unsigned char) (n/scale);
+      *str++=d+'0';
+      n=n-(float) d*scale;
+      if (i++) continue;
+      *str++ ='.';
+      };
+*str++='e';
+// 26012010_3
+if (expon<0)
+   {
+   expon=-expon;
+   *str='-';
+   }
+else
+   *str='+';
+++str;
+*str++='0'+expon/10;
+*str++='0'+expon%10;
+*str=0;
+}
+
+float atof(char *str)
+{
+char *start,*end;
+float scale,result;
+unsigned char c,e,minus,minuse;
+result=0.0;
+while (isspace(c=*str)) str++;
+minus=0;
+if (c=='+') str++;
+else if(c=='-') {minus=1; str++;};
+c=e=0;
+start=str;
+while (isdigit(*str)||(c=(*str=='.')))
+      {
+      e|=c;
+      ++str;
+      };
+end=str;
+if (e)
+   {
+   --str;
+   while (*str!='.')
+         {
+         result=(result+(*str-'0'))/10.0;
+         --str;
+         };
+   };
+scale=1.0;
+while (--str>=start)
+      {
+      result=result+scale*(*str-'0');
+      scale=scale*10.0;
+      };
+c=*end++;
+if ((c=='e')||(c=='E'))
+   {
+   minuse=e=0;
+   c=*end;
+   if (c=='+') end++;
+   else if (c=='-') {minuse=1; end++;};
+   while (isdigit(c=*end++)) e=e*10+c-'0';
+   if (e>38)
+      {
+      if (minus) return -3.40282346e+38F;
+      return 3.40282346e+38F;
+      };
+   c=0x20;
+   scale=1.0;
+   while (c)
+         {
+         scale=scale*scale;
+         if (c&e) scale=scale*10.0;
+         c>>=1;
+         };
+   if (minuse) result=result/scale;
+   else result=result*scale;
+   };
+if (minus) result=-result;
+return result;
+}
+
+static unsigned long _seed=1;
+
+void srand(int seed)
+{
+_seed=seed;
+}
+
+#pragma warn-
+
+int rand(void)
+{
+_seed=0x41C64E6D*_seed+30562;
+#ifdef _ENHANCED_CORE_
+#asm
+	movw r30,r22
+	andi r31,0x7F
+#endasm
+#else
+#asm
+	mov  r30,r22
+	mov  r31,r23
+	andi r31,0x7F
+#endasm
+#endif
+}
+
+#if (_HEAP_SIZE_ !=0 ) && (_HEAP_SIZE_ < 8)
+#error Heap size too small
+#endif
+
+struct alloc_data
+       {
+       unsigned int block_size;
+       struct alloc_data *next;
+       };
+
+static void *allocate_block(unsigned int size)
+{
+struct alloc_data *pa;
+struct alloc_data *pn;
+struct alloc_data *pr;
+unsigned char *pe;
+pa=(struct alloc_data *) _HEAP_START_;
+pa->block_size=0;
+while (pa)
+      {
+      pr=(struct alloc_data *) ((unsigned char *) pa+pa->block_size+sizeof(struct alloc_data));
+      if (pn=pa->next) pe=(unsigned char*) pn;
+      else pe=(unsigned char *) (_HEAP_START_+_HEAP_SIZE_);
+      if ((pe-(unsigned char *)pr) >= (size+sizeof(struct alloc_data)))
+         {
+         pa->next=pr;
+         pr->next=pn;
+         pr->block_size=size;
+         pr=(struct alloc_data *) ((unsigned char *) pr+sizeof(struct alloc_data));
+         return pr;
+         };
+      pa=pn;
+      };
+return NULL;
+}
+
+static struct alloc_data *find_prev_block(void *pp)
+{
+struct alloc_data *pa;
+struct alloc_data *pn;
+pa=(struct alloc_data *) _HEAP_START_;
+while (pa)
+      {
+      if ((pn=pa->next) == pp) return pa;
+      pa=pn;
+      };
+return NULL;
+}
+
+void *realloc(void *ptr, unsigned int size)
+{
+#if (_HEAP_SIZE_ > 0)
+struct alloc_data *pp;
+struct alloc_data *pa;
+void *p;
+unsigned int bsize;
+
+if (ptr)
+   {
+   pp=(struct alloc_data *) ((unsigned char *) ptr-sizeof(struct alloc_data));
+   if (pa=find_prev_block(pp))
+      {
+      pa->next=pp->next;
+      if (size)
+         {
+         if (p=allocate_block(size))
+            {
+            if ((bsize=pp->block_size) < size) size=bsize;
+            memmove(p,ptr,size);
+            return p;
+            };
+         pa->next=pp;
+         };
+      };
+   };
+#endif
+return NULL;
+}
+
+void *malloc(unsigned int size)
+{
+#if (_HEAP_SIZE_ > 0)
+void *p;
+p=NULL;
+if (size)
+   if (p=allocate_block(size)) memset(p,0,size);
+return p;
+#else
+return NULL;
+#endif
+}
+
+void *calloc(unsigned int num, unsigned int size)
+{
+return malloc(num*size);
+}
+
+void free(void *ptr)
+{
+realloc(ptr,0);
+}
+
+#ifdef _WARNINGS_ON_
+#pragma warn+
+#endif

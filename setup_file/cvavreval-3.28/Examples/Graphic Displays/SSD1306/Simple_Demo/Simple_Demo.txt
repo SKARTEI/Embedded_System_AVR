@@ -1,0 +1,34 @@
+Solomon Systech SSD1306 Graphic controller demo
+(C) Copyright 2011-2014 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+The demo is designed to run on an ATxmega128A1
+XMEGA-A1 Xplained development board with chip clock of 2 MHz.
+
+A module with the Univision UG-2864HSWEG01 128x64 OLED display
+was used for the purpose of this demo.
+It can be purchased from:
+http://www.wide.hk/products.php?product=0.96%22-128x64-OLED-Display-Module-SSD1306
+
+The display module connections are:
+DB0    - PORTA bit 0
+DB1    - PORTA bit 1
+DB2    - PORTA bit 2
+DB3    - PORTA bit 3
+DB4    - PORTA bit 4
+DB5    - PORTA bit 5
+DB6    - PORTA bit 6
+DB7    - PORTA bit 7
+
+RS     - PORTD bit 0
+/CS    - PORTD bit 1
+/WR    - PORTD bit 2
+/RD    - PORTD bit 3
+/RES   - PORTD bit 4
+
+VIN    - 8.5..11V
+3V3    - +3.3V from power supply
+GND    - GND
+
+Make sure to specify the correct connections in the
+Project|Configure|C Compiler|Libraries|Graphic LCD menu.

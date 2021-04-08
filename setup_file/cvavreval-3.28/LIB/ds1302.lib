@@ -1,0 +1,165 @@
+/*
+  CodeVisionAVR C Compiler
+  (C) 1998-2014 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Dallas Semiconductors DS1302 Real Time Clock functions V1.1
+*/
+
+/*
+  V1.1 08022011_1 - modified to support Virtual ports of
+  ATxmega devices
+
+  Example for VPORT0_OUT of ATxmega devices,
+  VPORT0 must be mapped to a physical port of
+  the chip during initialization after reset:
+
+  #asm
+      .equ __ds1302_port 0x11 ; mapped to VPORT0_OUT
+      .equ __ds1302_io=2
+      .equ __ds1302_sclk=1
+      .equ __ds1302_rst=4
+  #endasm
+*/
+
+#if __CODEVISIONAVR__<3160
+#error ds1302.lib requires CodeVisionAVR V3.16 or later
+#endif
+
+#include <bcd.h>
+#include <delay.h>
+
+static void ds1302_rst0(void)
+{
+#asm("cbi  __ds1302_port,__ds1302_rst")
+delay_us(5);
+}
+
+static void ds1302_write1(unsigned char c);
+
+static void ds1302_write0(unsigned char c)
+{
+#asm
+    sbi  __ds1302_port-1,__ds1302_sclk
+    sbi  __ds1302_port-1,__ds1302_io
+    sbi  __ds1302_port-1,__ds1302_rst
+    sbi  __ds1302_port,__ds1302_rst
+#endasm
+delay_us(5);
+ds1302_write1(c);
+}
+
+#pragma dstack_par+
+#pragma asm_function+
+
+static void ds1302_write1(unsigned char c)
+{
+#asm
+    ld   r30,y+
+    ldi  r26,8
+ds1302_write2:
+    ror  r30
+    cbi  __ds1302_port,__ds1302_io
+    brcc ds1302_write3
+    sbi  __ds1302_port,__ds1302_io
+ds1302_write3:
+    nop
+    nop
+    nop
+    nop
+    sbi  __ds1302_port,__ds1302_sclk
+#endasm
+delay_us(2);
+#asm("cbi  __ds1302_port,__ds1302_sclk")
+delay_us(2);
+#asm
+    dec  r26
+    brne ds1302_write2
+    ret
+#endasm
+}
+
+#pragma asm_function-
+#pragma dstack_par-
+
+unsigned char ds1302_read(unsigned char addr)
+{
+ds1302_write0(addr | 1);
+#asm
+    cbi  __ds1302_port,__ds1302_io
+    cbi  __ds1302_port-1,__ds1302_io
+    ldi  r26,8
+ds1302_read0:
+    clc
+#endasm
+
+#ifdef _ATXMEGA_DEVICE_
+#asm("sbic __ds1302_port+1,__ds1302_io")
+#else
+#asm("sbic __ds1302_port-2,__ds1302_io")
+#endif
+
+#asm
+    sec
+    ror  r30
+    sbi  __ds1302_port,__ds1302_sclk
+#endasm
+delay_us(2);
+#asm("cbi  __ds1302_port,__ds1302_sclk")
+delay_us(2);
+#asm
+    dec  r26
+    brne ds1302_read0
+#endasm
+ds1302_rst0();
+}
+
+void ds1302_write(unsigned char addr,unsigned char data)
+{
+ds1302_write0(addr & 0xFE);
+ds1302_write1(data);
+ds1302_rst0();
+}
+
+void rtc_init(unsigned char tc_on,unsigned char diodes,unsigned char res)
+{
+res&=3;
+if (tc_on) res|=0xa0;
+if (diodes==1) res|=4;
+else if (diodes==2) res|=8;
+else res=0;
+ds1302_write(0x8e,0);
+ds1302_write(0x90,res);
+ds1302_write(0x8e,0x80);
+}
+
+void rtc_get_time(unsigned char *hour,unsigned char *min,unsigned char *sec)
+{
+*hour=bcd2bin(ds1302_read(0x85));
+*min=bcd2bin(ds1302_read(0x83));
+*sec=bcd2bin(ds1302_read(0x81));
+}
+
+void rtc_set_time(unsigned char hour,unsigned char min,unsigned char sec)
+{
+ds1302_write(0x8e,0);
+ds1302_write(0x84,bin2bcd(hour));
+ds1302_write(0x82,bin2bcd(min));
+ds1302_write(0x80,bin2bcd(sec));
+ds1302_write(0x8e,0x80);
+}
+
+void rtc_get_date(unsigned char *day,unsigned char *month,unsigned char *year)
+{
+*day=bcd2bin(ds1302_read(0x87));
+*month=bcd2bin(ds1302_read(0x89));
+*year=bcd2bin(ds1302_read(0x8d));
+}
+
+void rtc_set_date(unsigned char day,unsigned char month,unsigned char year)
+{
+ds1302_write(0x8e,0);
+ds1302_write(0x86,bin2bcd(day));
+ds1302_write(0x88,bin2bcd(month));
+ds1302_write(0x8c,bin2bcd(year));
+ds1302_write(0x8e,0x80);
+}

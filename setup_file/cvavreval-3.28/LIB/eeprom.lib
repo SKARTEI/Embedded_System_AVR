@@ -1,0 +1,29 @@
+/************************************************
+CodeVisionAVR C Compiler V3.09+
+(C) 1998-2014 Pavel Haiduc, HP InfoTech S.R.L.
+
+EEPROM access support and Atmel Studio 6
+compatibility functions.
+************************************************/
+
+#ifdef _MODEL_TINY_
+void eeprom_read_block(void *dst,eeprom void *src,unsigned char n)
+#else
+void eeprom_read_block(void *dst,eeprom void *src,unsigned short n)
+#endif
+{
+unsigned char *pd=(unsigned char*) dst;
+eeprom unsigned char *ps=(eeprom unsigned char *) src;
+while (n--) *pd++ = *ps++;
+}
+
+#ifdef _MODEL_TINY_
+void eeprom_write_block(void *src,eeprom void *dst,unsigned char n)
+#else
+void eeprom_write_block(void *src,eeprom void *dst,unsigned short n)
+#endif
+{
+eeprom unsigned char *pd=(eeprom unsigned char*) dst;
+unsigned char *ps=(unsigned char *) src;
+while (n--) *pd++ = *ps++;
+}

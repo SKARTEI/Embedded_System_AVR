@@ -1,0 +1,46 @@
+Maxim DS3231 Real Time Clock Example
+(C) Copyright 2014-2015 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+CodeVisionAVR Compiler version 3.23 or later
+is required.
+
+The program is designed to be executed on an
+Arduino UNO development board, using
+an ATmega328P chip running at 16 MHz.
+
+The hardware TWI is used for communication
+with the DS3231 RTC. 
+
+The RTC output is transmitted serially at a
+Baud rate of 9600, 8N1 and can be displayed using
+the CodeVisionAVR IDE Tools|Terminal.
+
+The connections are:
+DS3231 shield - Arduino UNO
+SDA           - Analog in 4 (SDA, PORTC bit 4)
+SCL           - Analog in 5 (SCL, PORTC bit 5)
+SQW           - Digital 2 (PORTD bit 2)
+GND           - GND
+VCC           - Arduino Power 5V
+
+- Arduino's USB must be connected to one of the PC's USB ports.
+- The Arduino Virtual Serial Port will be now listed in the
+  Device Manager window under Ports (COM & LPT)
+- Retain the COMn number of the serial port and go to
+  the CodeVisionAVR IDE "Settings|Terminal" menu and set
+  the Terminal to use this COM port
+- In the Terminal settings specify the Baud rate: 9600
+  and disable the "Append On Reception" options
+- Start the CodeVisionAVR Terminal using the "Tools|Terminal"
+  menu and click on the "Connect" button
+- Go to "Project|Configure|After Build" and make sure that
+  the Arduino Upload COM port matches the one listed in the
+  Windows Device Manager for the Arduino UNO board
+- Do Project|Build All.
+
+The program size exceeds the code size limit of the Evaluation
+version.
+In this case the pre-compiled executable from
+\Examples\AVR\DS3231 RTC\TWI\Release\Exe\rtc_demo.hex 
+can be uploaded to the Arduino board.

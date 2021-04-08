@@ -1,0 +1,49 @@
+SOFTWARE LICENCE
+
+The use of CodeVisionAVR indicates your understanding and acceptance of the
+following terms and conditions. This license shall supersede any verbal or
+prior verbal or written, statement or agreement to the contrary.
+If you do not understand or accept these terms, or your local regulations
+prohibit "after sale" license agreements or limited disclaimers, you must
+cease and desist using this product immediately.
+
+This product is (C) Copyright 1998-2016 Pavel Haiduc and HP InfoTech s.r.l.,
+all rights reserved. 
+International copyright laws, international treaties and all other applicable
+national or international laws protect this product.
+This software product and documentation may not, in whole or in part,
+be copied, photocopied, translated, or reduced to any electronic medium or
+machine readable form, without prior consent in writing, from Pavel Haiduc and
+HP InfoTech s.r.l. according to all applicable laws. 
+The sole owners of this product are Pavel Haiduc and HP InfoTech s.r.l.
+
+LIABILITY DISCLAIMER
+
+This product and/or license is provided as is, without any representation or
+warranty of any kind, either express or implied, including without limitation
+any representations or endorsements regarding the use of, the results of,
+or performance of the product, Its appropriateness, accuracy, reliability,
+or correctness.
+The user and/or licensee assume the entire risk as to the use of this product.
+Pavel Haiduc or HP InfoTech s.r.l. do not assume liability for the use of
+this program beyond the original purchase price of the software.
+In no event will Pavel Haiduc or HP InfoTech s.r.l. be liable for additional
+direct or indirect damages including any lost profits, lost savings, or other 
+incidental or consequential damages arising from any defects, or the use or 
+inability to use this program, even if Pavel Haiduc or HP InfoTech s.r.l.
+have been advised of the possibility of such damages.
+
+RESTRICTIONS
+
+You may not use, copy, modify, translate, or transfer the programs,
+documentation, or any copy except as expressly defined in this agreement.
+You may not attempt to unlock or bypass any "copy-protection" or
+authentication algorithm utilized by the program.
+You may not remove or modify any copyright notice or the method by which it
+may be invoked.
+
+OPERATING LICENSE
+
+You have the right to freely use the enclosed program for EVALUATION purposes only.
+Developing of commercial applications with the CodeVisionAVR Evaluation
+version is strictly prohibited.

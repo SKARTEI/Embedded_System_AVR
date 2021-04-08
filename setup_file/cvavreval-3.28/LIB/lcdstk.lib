@@ -1,0 +1,149 @@
+/* Alphanumeric LCD driver routines for the
+   Kanda Systems STK200+/300 development boards
+   
+   CodeVisionAVR 3.25+ C Compiler
+   (C) 1998-2016 Pavel Haiduc, HP InfoTech S.R.L.
+
+   The LCD is connected in memory mapped mode
+   This driver can be used only for AVR chips
+   that allow external RAM accessing
+*/
+
+#include <delay.h>
+#include <stdio.h>
+
+#define _LCD_RS0 (*(unsigned char *) 0x8000)
+#define _LCD_RS1 (*(unsigned char *) 0xc000)
+
+#pragma used+
+static unsigned char _base_y[4]={0x80,0xc0};
+unsigned char _lcd_x,_lcd_y,_lcd_maxx;
+#pragma used-
+
+void _lcd_ready(void)
+{
+do
+  {
+  #asm
+      ldi   r30,15
+      __lcd_delay:
+      dec   r30
+      brne  __lcd_delay
+  #endasm
+  }
+while (_LCD_RS0 & 0x80);
+}
+
+// write a byte to the LCD character generator or display RAM
+void lcd_write_byte(unsigned char addr, unsigned char data)
+{
+_lcd_ready();
+_LCD_RS0=addr;
+_lcd_ready();
+_LCD_RS1=data;
+}
+
+// read a byte from the LCD character generator or display RAM
+unsigned char lcd_read_byte(unsigned char addr)
+{
+_lcd_ready();
+_LCD_RS0=addr;
+_lcd_ready();
+return _LCD_RS1;
+}
+
+// set the LCD display position x=0..39 y=0..3
+void lcd_gotoxy(unsigned char x, unsigned char y)
+{
+_lcd_ready();
+_LCD_RS0=_base_y[y]+x;
+_lcd_x=x;
+_lcd_y=y;
+}
+
+// clear the LCD
+void lcd_clear(void)
+{
+_lcd_ready();
+_LCD_RS0=2;   // cursor home
+_lcd_ready();
+_LCD_RS0=0xc; // cursor off
+_lcd_ready();
+_LCD_RS0=1;   // clear
+_lcd_x=_lcd_y=0;
+}
+
+#pragma dstack_par+
+
+void lcd_putchar(char c)
+{
+#asm
+    push r30
+    push r31
+    ld   r26,y
+    set
+    cpi  r26,10
+    breq __lcd_putchar1
+    clt
+#endasm
+if (_lcd_x>=_lcd_maxx)
+   {
+   #asm("__lcd_putchar1:")
+   ++_lcd_y;
+   lcd_gotoxy(0,_lcd_y);
+   #asm("brts __lcd_putchar0")
+   };
+++_lcd_x;
+_lcd_ready();
+_LCD_RS1=c;
+#asm
+__lcd_putchar0:
+    pop  r31
+    pop  r30
+#endasm
+}
+
+#pragma dstack_par-
+
+// write the string str located in SRAM to the LCD
+void lcd_puts(char *str)
+{
+char k;
+while (k=*str++) lcd_putchar(k);
+}
+
+// write the string str located in FLASH to the LCD
+void lcd_putsf(char flash *str)
+{
+char k;
+while (k=*str++) lcd_putchar(k);
+}
+
+// initialize the LCD controller
+unsigned char lcd_init(unsigned char lcd_columns)
+{
+#asm
+    in   r30,MCUCR
+    ori  r30,0xc0
+    out  MCUCR,r30
+#endasm
+_lcd_maxx=lcd_columns;
+_base_y[2]=lcd_columns+0x80;
+_base_y[3]=lcd_columns+0xc0;
+delay_ms(50);
+_LCD_RS0=0x38;
+delay_ms(5);
+_LCD_RS0=0x38;
+delay_ms(1);
+_LCD_RS0=0x38;
+delay_ms(1);
+_LCD_RS0=4;
+delay_ms(1);
+_LCD_RS0=0x85;
+delay_ms(1);
+if ((_LCD_RS0 & 0xf)!=5) return 0;
+_lcd_ready();
+_LCD_RS0=6;
+lcd_clear();
+return 1;
+}

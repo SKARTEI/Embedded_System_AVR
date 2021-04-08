@@ -1,0 +1,299 @@
+/*
+  CodeVisionAVR V2.05.1+ C Compiler
+  (C) 1998-2011 Pavel Haiduc, HP InfoTech S.R.L.
+
+  Philips PCF8583 TWI bus Real Time Clock functions
+*/
+
+#include <bcd.h>
+
+#define PCF8583_I2C_ADDR (0xa0>>1)
+
+unsigned char rtc_status;
+bit rtc_alarm;
+
+#ifdef _ATXMEGA_DEVICE_
+// ATxmega devices
+#include <twix.h>
+
+static TWI_MASTER_INFO_t *ptwi_master;
+
+void pcf8583_twi_init(TWI_MASTER_INFO_t *ptwim)
+{
+ptwi_master=ptwim;
+}
+
+unsigned char rtc_read(unsigned char chip,unsigned char address)
+{
+unsigned char data;
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,&address,1,&data,1);
+return data;
+}
+
+void rtc_write(unsigned char chip, unsigned char address,unsigned char data)
+{
+unsigned char buf[2];
+buf[0]=address;
+buf[1]=data;
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,buf,2,0,0);
+}
+#else
+// non-ATxmega devices
+#include <twi.h>
+
+unsigned char rtc_read(unsigned char chip,unsigned char address)
+{
+unsigned char data;
+twi_master_trans(PCF8583_I2C_ADDR | chip,&address,1,&data,1);
+return data;
+}
+
+void rtc_write(unsigned char chip, unsigned char address,unsigned char data)
+{
+unsigned char buf[2];
+buf[0]=address;
+buf[1]=data;
+twi_master_trans(PCF8583_I2C_ADDR | chip,buf,2,0,0);
+}
+#endif
+
+unsigned char rtc_get_status(unsigned char chip)
+{
+rtc_status=rtc_read(chip,0);
+rtc_alarm=(rtc_status&2);
+return rtc_status;
+}
+
+void rtc_init(unsigned char chip,unsigned char dated_alarm)
+{
+unsigned char d;
+d=0x90;
+if (dated_alarm) d=0xb0;
+rtc_status=0;
+rtc_alarm=0;
+rtc_write(chip,0,0);
+rtc_write(chip,4,rtc_read(chip,4)&0x3f);
+rtc_write(chip,8,d);
+}
+
+void rtc_stop(unsigned char chip)
+{
+rtc_get_status(chip);
+rtc_status|=0x80;
+rtc_write(chip,0,rtc_status);
+}
+
+void rtc_start(unsigned char chip)
+{
+rtc_get_status(chip);
+rtc_status&=0x7f;
+rtc_write(chip,0,rtc_status);
+}
+
+void rtc_hold_off(unsigned char chip)
+{
+rtc_get_status(chip);
+rtc_status&=0xbf;
+rtc_write(chip,0,rtc_status);
+}
+
+void rtc_hold_on(unsigned char chip)
+{
+rtc_get_status(chip);
+rtc_status|=0x40;
+rtc_write(chip,0,rtc_status);
+}
+
+void rtc_alarm_off(unsigned char chip)
+{
+rtc_get_status(chip);
+rtc_status&=0xfb;
+rtc_write(chip,0,rtc_status);
+}
+
+void rtc_alarm_on(unsigned char chip)
+{
+rtc_get_status(chip);
+rtc_status|=4;
+rtc_write(chip,0,rtc_status);
+}
+
+void rtc_write_word(unsigned char chip,unsigned char addr,unsigned data)
+{
+rtc_write(chip,addr,(unsigned char) data&0xff);
+rtc_write(chip,++addr,(unsigned char)(data>>8));
+}
+
+#ifdef _ATXMEGA_DEVICE_
+void rtc_get_time(unsigned char chip,unsigned char *hour,unsigned char *min,
+unsigned char *sec,unsigned char *hsec)
+{
+unsigned char buf[4];
+buf[0]=1;
+rtc_hold_on(chip);
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,buf,1,buf,4);
+rtc_hold_off(chip);
+*hsec=bcd2bin(buf[0]);
+*sec=bcd2bin(buf[1]);
+*min=bcd2bin(buf[2]);
+*hour=bcd2bin(buf[3]);
+}
+
+void rtc_set_time(unsigned char chip,unsigned char hour,unsigned char min,
+unsigned char sec,unsigned char hsec)
+{
+unsigned char buf[5];
+buf[0]=1;
+buf[1]=bin2bcd(hsec);
+buf[2]=bin2bcd(sec);
+buf[3]=bin2bcd(min);
+buf[4]=bin2bcd(hour);
+rtc_stop(chip);
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,buf,5,0,0);
+rtc_start(chip);
+}
+#else
+void rtc_get_time(unsigned char chip,unsigned char *hour,unsigned char *min,
+unsigned char *sec,unsigned char *hsec)
+{
+unsigned char buf[4];
+buf[0]=1;
+rtc_hold_on(chip);
+twi_master_trans(PCF8583_I2C_ADDR | chip,buf,1,buf,4);
+rtc_hold_off(chip);
+*hsec=bcd2bin(buf[0]);
+*sec=bcd2bin(buf[1]);
+*min=bcd2bin(buf[2]);
+*hour=bcd2bin(buf[3]);
+}
+
+void rtc_set_time(unsigned char chip,unsigned char hour,unsigned char min,
+unsigned char sec,unsigned char hsec)
+{
+unsigned char buf[5];
+buf[0]=1;
+buf[1]=bin2bcd(hsec);
+buf[2]=bin2bcd(sec);
+buf[3]=bin2bcd(min);
+buf[4]=bin2bcd(hour);
+rtc_stop(chip);
+twi_master_trans(PCF8583_I2C_ADDR | chip,buf,5,0,0);
+rtc_start(chip);
+}
+#endif
+
+void rtc_get_date(unsigned char chip,unsigned char *day,unsigned char *month,
+unsigned *year)
+{
+unsigned char dy;
+unsigned y1;
+rtc_hold_on(chip);
+dy=rtc_read(chip,5);
+*month=bcd2bin(rtc_read(chip,6)&0x1f);
+rtc_hold_off(chip);
+*day=bcd2bin(dy&0x3f);
+dy>>=6;
+y1=rtc_read(chip,0x10)|((unsigned) rtc_read(chip,0x11)<<8);
+if (((unsigned char) y1&3)!=dy) rtc_write_word(chip,0x10,++y1);
+*year=y1;
+}
+
+void rtc_set_date(unsigned char chip,unsigned char day,unsigned char month,
+unsigned year)
+{
+rtc_write_word(chip,0x10,year);
+rtc_stop(chip);
+rtc_write(chip,5,bin2bcd(day)|(((unsigned char) year&3)<<6));
+rtc_write(chip,6,bin2bcd(month));
+rtc_start(chip);
+}
+
+#ifdef _ATXMEGA_DEVICE_
+void rtc_get_alarm_time(unsigned char chip,unsigned char *hour,
+unsigned char *min,unsigned char *sec,unsigned char *hsec)
+{
+unsigned char buf[4];
+buf[0]=9;
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,buf,1,buf,4);
+*hsec=bcd2bin(buf[0]);
+*sec=bcd2bin(buf[1]);
+*min=bcd2bin(buf[2]);
+*hour=bcd2bin(buf[3]);
+}
+
+void rtc_set_alarm_time(unsigned char chip,unsigned char hour,
+unsigned char min,unsigned char sec,unsigned char hsec)
+{
+unsigned char buf[5];
+buf[0]=9;
+buf[1]=bin2bcd(hsec);
+buf[2]=bin2bcd(sec);
+buf[3]=bin2bcd(min);
+buf[4]=bin2bcd(hour);
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,buf,5,0,0);
+}
+
+void rtc_get_alarm_date(unsigned char chip,unsigned char *day,
+unsigned char *month)
+{
+unsigned char buf[3];
+buf[0]=0xd;
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,buf,1,buf,4);
+*day=bcd2bin(buf[0] & 0x3f);
+*month=bcd2bin(buf[1] & 0x1f);
+}
+
+void rtc_set_alarm_date(unsigned char chip,unsigned char day,
+unsigned char month)
+{
+unsigned char buf[3];
+buf[0]=0xd;
+buf[1]=bin2bcd(day);
+buf[2]=bin2bcd(month);
+twi_master_trans(ptwi_master,PCF8583_I2C_ADDR | chip,buf,3,0,0);
+}
+#else
+void rtc_get_alarm_time(unsigned char chip,unsigned char *hour,
+unsigned char *min,unsigned char *sec,unsigned char *hsec)
+{
+unsigned char buf[4];
+buf[0]=9;
+twi_master_trans(PCF8583_I2C_ADDR | chip,buf,1,buf,4);
+*hsec=bcd2bin(buf[0]);
+*sec=bcd2bin(buf[1]);
+*min=bcd2bin(buf[2]);
+*hour=bcd2bin(buf[3]);
+}
+
+void rtc_set_alarm_time(unsigned char chip,unsigned char hour,
+unsigned char min,unsigned char sec,unsigned char hsec)
+{
+unsigned char buf[5];
+buf[0]=9;
+buf[1]=bin2bcd(hsec);
+buf[2]=bin2bcd(sec);
+buf[3]=bin2bcd(min);
+buf[4]=bin2bcd(hour);
+twi_master_trans(PCF8583_I2C_ADDR | chip,buf,5,0,0);
+}
+
+void rtc_get_alarm_date(unsigned char chip,unsigned char *day,
+unsigned char *month)
+{
+unsigned char buf[3];
+buf[0]=0xd;
+twi_master_trans(PCF8583_I2C_ADDR | chip,buf,1,buf,4);
+*day=bcd2bin(buf[0] & 0x3f);
+*month=bcd2bin(buf[1] & 0x1f);
+}
+
+void rtc_set_alarm_date(unsigned char chip,unsigned char day,
+unsigned char month)
+{
+unsigned char buf[3];
+buf[0]=0xd;
+buf[1]=bin2bcd(day);
+buf[2]=bin2bcd(month);
+twi_master_trans(PCF8583_I2C_ADDR | chip,buf,3,0,0);
+}
+#endif

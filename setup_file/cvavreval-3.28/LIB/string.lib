@@ -1,0 +1,4394 @@
+/*
+  CodeVisionAVR C Compiler V3.25+
+  (C) 1998-2016 Pavel Haiduc, HP InfoTech S.R.L.
+
+  String functions
+*/
+
+#pragma warn-
+
+#ifndef NULL
+#define NULL 0
+#endif
+
+#ifdef _ELPM_
+#define LPM_R0 #asm("elpm")
+#else
+#define LPM_R0 #asm("lpm")
+#endif
+
+#ifdef _ENHANCED_CORE_
+#ifdef _ELPM_
+#define LPM_R0_INC #asm("elpm r0,z+")
+#else
+#define LPM_R0_INC #asm("lpm  r0,z+")
+#endif
+#else
+#ifdef _ELPM_
+#define LPM_R0_INC #asm("elpm\    adiw r30,1")
+#else
+#define LPM_R0_INC #asm("lpm\    adiw r30,1")
+#endif
+#endif
+
+#ifdef _ATXMEGA_DEVICE_
+#define SAVE_RAMPZ #asm("in   r0,rampz\    push r0")
+#define RESTORE_RAMPZ #asm("pop  r0\    out  rampz,r0")
+#else
+#define SAVE_RAMPZ
+#define RESTORE_RAMPZ
+#endif
+
+#pragma dstack_par+
+
+// 21032011_1
+#ifdef _MODEL_TINY_
+void *memccpy(void *dest,void *src,char c,unsigned char n)
+{
+#asm
+    ldd  r30,y+3
+    ld   r24,y
+    tst  r24
+    breq memccpy1
+    clr  r31
+    clr  r27
+    ldd  r26,y+2
+    ldd  r23,y+1
+memccpy0:
+    ld   r22,x+
+    st   z+,r22
+    cp   r22,r23
+    breq memccpy2
+    dec  r24
+    brne memccpy0
+memccpy1:
+    clr  r30
+memccpy2:
+#endasm
+}
+#else
+void *memccpy(void *dest,void *src,char c,unsigned n)
+{
+#asm
+    ldd  r31,y+6
+    ldd  r30,y+5
+    ldd  r25,y+1
+    ld   r24,y
+    adiw r24,0
+    breq memccpy1
+    ldd  r27,y+4
+    ldd  r26,y+3
+    ldd  r23,y+2
+memccpy0:
+    ld   r22,x+
+    st   z+,r22
+    cp   r22,r23
+    breq memccpy2
+    sbiw r24,1
+    brne memccpy0
+memccpy1:
+    clr  r30
+    clr  r31
+memccpy2:
+#endasm
+}
+#endif
+
+#pragma asm_function+
+
+#ifdef _MODEL_TINY_
+void *memchr(void *buf,unsigned char c,unsigned char n)
+{
+#asm
+    ld   r26,y+
+    ld   r22,y+
+    ld   r30,y+
+    clr  r31
+    tst  r26
+    breq memchr1
+memchr0:
+    ld   r23,z
+    cp   r22,r23
+    breq memchr2
+    adiw r30,1
+    dec  r26
+    brne memchr0
+memchr1:
+    clr  r30
+memchr2:
+    ret
+#endasm
+}
+#else
+void *memchr(void *buf,unsigned char c,unsigned n)
+{
+#asm
+    ld   r26,y+
+    ld   r27,y+
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    adiw r26,0
+    breq memchr1
+memchr0:
+    ld   r23,z
+    cp   r22,r23
+    breq memchr2
+    adiw r30,1
+    sbiw r26,1
+    brne memchr0
+memchr1:
+    clr  r30
+    clr  r31
+memchr2:
+    ret
+#endasm
+}
+#endif
+
+#ifdef _MODEL_TINY_
+signed char memcmp(void *buf1,void *buf2,unsigned char n)
+{
+#asm
+    clr  r22
+    clr  r23
+    clr  r27
+    clr  r31
+    ld   r24,y+
+    ld   r30,y+
+    ld   r26,y+
+memcmp0:
+    tst  r24
+    breq memcmp1
+    dec  r24
+    ld   r22,x+
+    ld   r23,z+
+    cp   r22,r23
+    breq memcmp0
+memcmp1:
+    sub  r22,r23
+    brcc memcmp2
+    ldi  r30,-1
+    ret
+memcmp2:
+    ldi  r30,0
+    breq memcmp3
+    inc  r30
+memcmp3:
+    ret
+#endasm
+}
+#else
+signed char memcmp(void *buf1,void *buf2,unsigned n)
+{
+#asm
+    clr  r22
+    clr  r23
+    ld   r24,y+
+    ld   r25,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+memcmp0:
+    adiw r24,0
+    breq memcmp1
+    sbiw r24,1
+    ld   r22,x+
+    ld   r23,z+
+    cp   r22,r23
+    breq memcmp0
+memcmp1:
+    sub  r22,r23
+    brcc memcmp2
+    ldi  r30,-1
+    ret
+memcmp2:
+    ldi  r30,0
+    breq memcmp3
+    inc  r30
+memcmp3:
+    ret
+#endasm
+}
+#endif
+
+#ifdef _AVR8L_CORE_
+signed char memcmpf(void *buf1,void flash *buf2,unsigned char n)
+{
+#asm
+    clr  r16
+    clr  r22
+    clr  r27
+    ld   r24,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    subi r31,-0x40
+memcmpf0:
+    tst  r24
+    breq memcmpf1
+    dec  r24
+    ld   r22,x+
+    ld   r16,z+
+    cp   r22,r16
+    breq memcmpf0
+memcmpf1:
+    sub  r22,r16
+    brcc memcmpf2
+    ldi  r30,-1
+    ret
+memcmpf2:
+    ldi  r30,0
+    breq memcmpf3
+    inc  r30
+memcmpf3:
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+signed char memcmpf(void *buf1,void flash *buf2,unsigned char n)
+{
+#asm
+    clr  r0
+    clr  r22
+    clr  r27
+    ld   r24,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+memcmpf0:
+    tst  r24
+    breq memcmpf1
+    dec  r24
+    ld   r22,x+
+#endasm
+LPM_R0_INC
+#asm
+    cp   r22,r0
+    breq memcmpf0
+memcmpf1:
+    sub  r22,r0
+    brcc memcmpf2
+    ldi  r30,-1
+    ret
+memcmpf2:
+    ldi  r30,0
+    breq memcmpf3
+    inc  r30
+memcmpf3:
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+signed char memcmpf(void *buf1,void flash *buf2,unsigned n)
+{
+#asm
+    clr  r0
+    clr  r22
+    ld   r24,y+
+    ld   r25,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+memcmpf0:
+    adiw r24,0
+    breq memcmpf1
+    sbiw r24,1
+    ld   r22,x+
+#endasm
+LPM_R0_INC
+#asm
+    cp   r22,r0
+    breq memcmpf0
+memcmpf1:
+    sub  r22,r0
+    brcc memcmpf2
+    ldi  r30,-1
+    ret
+memcmpf2:
+    ldi  r30,0
+    breq memcmpf3
+    inc  r30
+memcmpf3:
+    ret
+#endasm
+}
+#elif defined _MODEL_MEDIUM_ |defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+signed char memcmpf(void *buf1,void flash *buf2,unsigned n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r24,y+
+    ld   r25,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+    out  rampz,r22
+memcmpf0:
+    adiw r24,0
+    breq memcmpf1
+    sbiw r24,1
+    ld   r1,x+
+    elpm r0,z+
+    cp   r1,r0
+    breq memcmpf0
+memcmpf1:
+    sub  r1,r0
+    brcc memcmpf2
+    ldi  r30,-1
+    rjmp memcmpf3
+memcmpf2:
+    ldi  r30,0
+    breq memcmpf3
+    inc  r30
+memcmpf3:
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+signed char memcmpf(void *buf1,void flash *buf2,unsigned n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r24,y+
+    ld   r25,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+memcmpf0:
+    adiw r24,0
+    breq memcmpf1
+    sbiw r24,1
+    ld   r1,x+
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r1,r0
+    breq memcmpf0
+memcmpf1:
+    sub  r1,r0
+    brcc memcmpf2
+    ldi  r30,-1
+    rjmp memcmpf3
+memcmpf2:
+    ldi  r30,0
+    breq memcmpf3
+    inc  r30
+memcmpf3:
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+
+#pragma asm_function-
+
+#ifdef _MODEL_TINY_
+void *memcpy(void *dest,void *src,unsigned char n)
+{
+#asm
+    ld   r24,y
+    tst  r24
+    breq memcpy1
+    clr  r27
+    ldd  r26,y+2
+    clr  r31
+    ldd  r30,y+1
+memcpy0:
+    ld   r22,z+
+    st   x+,r22
+    dec  r24
+    brne memcpy0
+memcpy1:
+    ldd  r30,y+2
+#endasm
+}
+#else
+void *memcpy(void *dest,void *src,unsigned n)
+{
+#asm
+    ldd  r25,y+1
+    ld   r24,y
+    adiw r24,0
+    breq memcpy1
+    ldd  r27,y+5
+    ldd  r26,y+4
+    ldd  r31,y+3
+    ldd  r30,y+2
+memcpy0:
+    ld   r22,z+
+    st   x+,r22
+    sbiw r24,1
+    brne memcpy0
+memcpy1:
+    ldd  r31,y+5
+    ldd  r30,y+4
+#endasm
+}
+#endif
+
+#ifdef _AVR8L_CORE_
+void *memcpyf(void *dest,void flash *src,unsigned char n)
+{
+#asm
+    ld   r24,y
+    tst  r24
+    breq memcpyf1
+    clr  r27
+    ldd  r26,y+3
+    ldd  r31,y+2
+    ldd  r30,y+1
+    subi r31,-0x40
+memcpyf0:
+    ld   r16,z+
+    st   x+,r16
+    dec  r24
+    brne memcpyf0
+memcpyf1:
+    ldd  r30,y+3
+#endasm
+}
+#elif defined _MODEL_TINY_
+void *memcpyf(void *dest,void flash *src,unsigned char n)
+{
+#asm
+    ld   r24,y
+    tst  r24
+    breq memcpyf1
+    clr  r27
+    ldd  r26,y+3
+    ldd  r31,y+2
+    ldd  r30,y+1
+memcpyf0:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    dec  r24
+    brne memcpyf0
+memcpyf1:
+    ldd  r30,y+3
+#endasm
+}
+#elif defined _MODEL_SMALL_
+void *memcpyf(void *dest,void flash *src,unsigned n)
+{
+#asm
+    ldd  r25,y+1
+    ld   r24,y
+    adiw r24,0
+    breq memcpyf1
+    ldd  r27,y+5
+    ldd  r26,y+4
+    ldd  r31,y+3
+    ldd  r30,y+2
+memcpyf0:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    sbiw r24,1
+    brne memcpyf0
+memcpyf1:
+    ldd  r31,y+5
+    ldd  r30,y+4
+#endasm
+}
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+void *memcpyf(void *dest,void flash *src,unsigned n)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r25,y+1
+    ld   r24,y
+    adiw r24,0
+    breq memcpyf1
+    ldd  r27,y+7
+    ldd  r26,y+6
+    ldd  r22,y+4
+    ldd  r31,y+3
+    ldd  r30,y+2
+    out  rampz,r22
+memcpyf0:
+    elpm r0,z+
+    st   x+,r0
+    sbiw r24,1
+    brne memcpyf0
+memcpyf1:
+    ldd  r31,y+7
+    ldd  r30,y+6
+#endasm
+RESTORE_RAMPZ
+}
+#else
+void *memcpyf(void *dest,void flash *src,unsigned n)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r25,y+1
+    ld   r24,y
+    adiw r24,0
+    breq memcpyf1
+    ldd  r27,y+7
+    ldd  r26,y+6
+    ldd  r22,y+4
+    ldd  r31,y+3
+    ldd  r30,y+2
+memcpyf0:
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    st   x+,r0
+    sbiw r24,1
+    brne memcpyf0
+memcpyf1:
+    ldd  r31,y+7
+    ldd  r30,y+6
+#endasm
+RESTORE_RAMPZ
+}
+#endif
+#endif
+
+#ifdef _MODEL_TINY_
+void *memmove(void *dest,void *src,unsigned char n)
+{
+#asm
+    ld   r24,y
+    tst  r24
+    breq memmove3
+    clr  r27
+    ldd  r26,y+2
+    clr  r31
+    ldd  r30,y+1
+    cp   r30,r26
+    breq memmove3
+    brlt memmove1
+memmove0:
+    ld   r22,z+
+    st   x+,r22
+    dec  r24
+    brne memmove0
+    rjmp memmove3
+memmove1:
+    add  r26,r24
+    add  r30,r24
+memmove2:
+    ld   r22,-z
+    st   -x,r22
+    dec  r24
+    brne memmove2
+memmove3:
+    ldd  r30,y+2
+#endasm
+}
+#else
+void *memmove(void *dest,void *src,unsigned n)
+{
+#asm
+    ldd  r25,y+1
+    ld   r24,y
+    adiw r24,0
+    breq memmove3
+    ldd  r27,y+5
+    ldd  r26,y+4
+    ldd  r31,y+3
+    ldd  r30,y+2
+    cp   r30,r26
+    cpc  r31,r27
+    breq memmove3
+    brlt memmove1
+memmove0:
+    ld   r22,z+
+    st   x+,r22
+    sbiw r24,1
+    brne memmove0
+    rjmp memmove3
+memmove1:
+    add  r26,r24
+    adc  r27,r25
+    add  r30,r24
+    adc  r31,r25
+memmove2:
+    ld   r22,-z
+    st   -x,r22
+    sbiw r24,1
+    brne memmove2
+memmove3:
+    ldd  r31,y+5
+    ldd  r30,y+4
+#endasm
+}
+#endif
+
+#ifdef _MODEL_TINY_
+void *memset(void *buf,unsigned char c,unsigned char n)
+{
+#asm
+    ld   r26,y
+    tst  r26
+    breq memset1
+    clr  r31
+    ldd  r30,y+2
+    ldd  r22,y+1
+memset0:
+    st   z+,r22
+    dec  r26
+    brne memset0
+memset1:
+    ldd  r30,y+2
+#endasm
+}
+#else
+void *memset(void *buf,unsigned char c,unsigned n)
+{
+#asm
+    ldd  r27,y+1
+    ld   r26,y
+    adiw r26,0
+    breq memset1
+    ldd  r31,y+4
+    ldd  r30,y+3
+    ldd  r22,y+2
+memset0:
+    st   z+,r22
+    sbiw r26,1
+    brne memset0
+memset1:
+    ldd  r30,y+3
+    ldd  r31,y+4
+#endasm
+}
+#endif
+
+#pragma asm_function+
+
+#ifdef _MODEL_TINY_
+char *strcat(char *str1,char *str2)
+{
+#asm
+    ld   r30,y+
+    clr  r31
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strcat0:
+    ld   r22,x+
+    tst  r22
+    brne strcat0
+    sbiw r26,1
+strcat1:
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strcat1
+    mov  r30,r24
+    ret
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strcat(char *str1,char *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strcat0:
+    ld   r22,x+
+    tst  r22
+    brne strcat0
+    sbiw r26,1
+strcat1:
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strcat1
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strcat(char *str1,char *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strcat0:
+    ld   r22,x+
+    tst  r22
+    brne strcat0
+    sbiw r26,1
+strcat1:
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strcat1
+    mov  r30,r24
+    mov  r31,r25
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+char *strcatf(char *str1,char flash *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+    subi r31,-0x40
+strcatf0:
+    ld   r22,x+
+    tst  r22
+    brne strcatf0
+    sbiw r26,1
+strcatf1:
+    ld   r16,z+
+    st   x+,r16
+    tst  r16
+    brne strcatf1
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+char *strcatf(char *str1,char flash *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strcatf0:
+    ld   r22,x+
+    tst  r22
+    brne strcatf0
+    sbiw r26,1
+strcatf1:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strcatf1
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+char *strcatf(char *str1,char flash *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strcatf0:
+    ld   r22,x+
+    tst  r22
+    brne strcatf0
+    sbiw r26,1
+strcatf1:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strcatf1
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strcatf(char *str1,char flash *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strcatf0:
+    ld   r22,x+
+    tst  r22
+    brne strcatf0
+    sbiw r26,1
+strcatf1:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strcatf1
+    mov  r30,r24
+    mov  r31,r25
+    ret
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+char *strcatf(char *str1,char flash *str2)
+{
+SAVE_RAMPZ
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strcatf0:
+    ld   r23,x+
+    tst  r23
+    brne strcatf0
+    sbiw r26,1
+    out  rampz,r22
+strcatf1:
+    elpm r0,z+
+    st   x+,r0
+    tst  r0
+    brne strcatf1
+    movw r30,r24
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+char *strcatf(char *str1,char flash *str2)
+{
+SAVE_RAMPZ
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strcatf0:
+    ld   r23,x+
+    tst  r23
+    brne strcatf0
+    sbiw r26,1
+strcatf1:
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    st   x+,r0
+    tst  r0
+    brne strcatf1
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _MODEL_TINY_
+char *strchr(char *str,char c)
+{
+#asm
+    ld   r26,y+
+    ld   r30,y+
+    clr  r31
+strchr0:
+    ld   r27,z
+    cp   r26,r27
+    breq strchr1
+    adiw r30,1
+    tst  r27
+    brne strchr0
+    clr  r30
+strchr1:
+    ret
+#endasm
+}
+#else
+char *strchr(char *str,char c)
+{
+#asm
+    ld   r26,y+
+    ld   r30,y+
+    ld   r31,y+
+strchr0:
+    ld   r27,z
+    cp   r26,r27
+    breq strchr1
+    adiw r30,1
+    tst  r27
+    brne strchr0
+    clr  r30
+    clr  r31
+strchr1:
+    ret
+#endasm
+}
+#endif
+
+// 23012016_2
+flash char *strchrf(flash char *str,char c)
+{
+char k;
+#pragma warn-
+while (k=*str)
+#pragma warn_default
+      {
+      if (k==c) return str;
+      ++str;
+      }
+return NULL;
+}
+
+#ifdef _MODEL_TINY_
+signed char strcmp(char *str1,char *str2)
+{
+#asm
+    ld   r30,y+
+    clr  r31
+    ld   r26,y+
+    clr  r27
+strcmp0:
+    ld   r22,x+
+    ld   r23,z+
+    cp   r22,r23
+    brne strcmp1
+    tst  r22
+    brne strcmp0
+strcmp3:
+    clr  r30
+    ret
+strcmp1:
+    sub  r22,r23
+    breq strcmp3
+    ldi  r30,1
+    brcc strcmp2
+    subi r30,2
+strcmp2:
+    ret
+#endasm
+}
+#else
+signed char strcmp(char *str1,char *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+strcmp0:
+    ld   r22,x+
+    ld   r23,z+
+    cp   r22,r23
+    brne strcmp1
+    tst  r22
+    brne strcmp0
+strcmp3:
+    clr  r30
+    ret
+strcmp1:
+    sub  r22,r23
+    breq strcmp3
+    ldi  r30,1
+    brcc strcmp2
+    subi r30,2
+strcmp2:
+    ret
+#endasm
+}
+#endif
+
+#ifdef _AVR8L_CORE_
+signed char strcmpf(char *str1,char flash *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    subi r31,-0x40
+strcmpf0:
+    ld   r17,x+
+    ld   r16,z+
+    cp   r16,r17
+    brne strcmpf1
+    tst  r16
+    brne strcmpf0
+strcmpf3:
+    clr  r30
+    ret
+strcmpf1:
+    sub  r17,r16
+    breq strcmpf3
+    ldi  r30,1
+    brcc strcmpf2
+    subi r30,2
+strcmpf2:
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+signed char strcmpf(char *str1,char flash *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+strcmpf0:
+    ld   r1,x+
+#endasm
+LPM_R0_INC
+#asm
+    cp   r0,r1
+    brne strcmpf1
+    tst  r0
+    brne strcmpf0
+strcmpf3:
+    clr  r30
+    ret
+strcmpf1:
+    sub  r1,r0
+    breq strcmpf3
+    ldi  r30,1
+    brcc strcmpf2
+    subi r30,2
+strcmpf2:
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+signed char strcmpf(char *str1,char flash *str2)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+strcmpf0:
+    ld   r1,x+
+#endasm
+LPM_R0_INC
+#asm
+    cp   r0,r1
+    brne strcmpf1
+    tst  r0
+    brne strcmpf0
+strcmpf3:
+    clr  r30
+    ret
+strcmpf1:
+    sub  r1,r0
+    breq strcmpf3
+    ldi  r30,1
+    brcc strcmpf2
+    subi r30,2
+strcmpf2:
+    ret
+#endasm
+}
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+signed char strcmpf(char *str1,char flash *str2)
+{
+SAVE_RAMPZ
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+    out  rampz,r22
+strcmpf0:
+    ld   r1,x+
+    elpm r0,z+
+    cp   r0,r1
+    brne strcmpf1
+    tst  r0
+    brne strcmpf0
+strcmpf3:
+    clr  r30
+    rjmp strcmpf2
+strcmpf1:
+    sub  r1,r0
+    breq strcmpf3
+    ldi  r30,1
+    brcc strcmpf2
+    subi r30,2
+strcmpf2:
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+signed char strcmpf(char *str1,char flash *str2)
+{
+SAVE_RAMPZ
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+strcmpf0:
+    ld   r1,x+
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r0,r1
+    brne strcmpf1
+    tst  r0
+    brne strcmpf0
+strcmpf3:
+    clr  r30
+    rjmp strcmpf2
+strcmpf1:
+    sub  r1,r0
+    breq strcmpf3
+    ldi  r30,1
+    brcc strcmpf2
+    subi r30,2
+strcmpf2:
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+
+
+#ifdef _MODEL_TINY_
+char *strcpy(char *dest,char *src)
+{
+#asm
+    ld   r30,y+
+    clr  r31
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strcpy0:
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strcpy0
+    mov  r30,r24
+    ret
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strcpy(char *dest,char *src)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strcpy0:
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strcpy0
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strcpy(char *dest,char *src)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strcpy0:
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strcpy0
+    mov  r30,r24
+    mov  r31,r25
+    ret
+ #endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+char *strcpyf(char *dest,char flash *src)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+    subi r31,-0x40
+strcpyf0:
+    ld   r16,z+
+    st   x+,r16
+    tst  r16
+    brne strcpyf0
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+char *strcpyf(char *dest,char flash *src)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strcpyf0:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strcpyf0
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+char *strcpyf(char *dest,char flash *src)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strcpyf0:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strcpyf0
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strcpyf(char *dest,char flash *src)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strcpyf0:
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strcpyf0
+    mov  r30,r24
+    mov  r31,r25
+    ret
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+char *strcpyf(char *dest,char flash *src)
+{
+SAVE_RAMPZ
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+    out  rampz,r22
+strcpyf0:
+    elpm r0,z+
+    st   x+,r0
+    tst  r0
+    brne strcpyf0
+    movw r30,r24
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+char *strcpyf(char *dest,char flash *src)
+{
+SAVE_RAMPZ
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strcpyf0:
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    st   x+,r0
+    tst  r0
+    brne strcpyf0
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+
+#pragma asm_function-
+
+#ifdef _MODEL_TINY_
+unsigned char strcspn(char *str,char *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+1
+    clr  r24
+strcspn0:
+    ld   r22,x+
+    tst  r22
+    breq strcspn2
+    clr  r31
+    ld   r30,y
+strcspn1:
+    ld   r23,z+
+    tst  r23
+    breq strcspn3
+    cp   r22,r23
+    breq strcspn2
+    rjmp strcspn1
+strcspn3:
+    inc  r24
+    rjmp strcspn0
+strcspn2:
+    mov  r30,r24
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+unsigned int strcspn(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strcspn0:
+    ld   r22,x+
+    tst  r22
+    breq strcspn2
+    ldd  r31,y+1
+    ld   r30,y
+strcspn1:
+    ld   r23,z+
+    tst  r23
+    breq strcspn3
+    cp   r22,r23
+    breq strcspn2
+    rjmp strcspn1
+strcspn3:
+    adiw r24,1
+    rjmp strcspn0
+strcspn2:
+    movw r30,r24
+#endasm
+}
+#else
+unsigned int strcspn(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strcspn0:
+    ld   r22,x+
+    tst  r22
+    breq strcspn2
+    ldd  r31,y+1
+    ld   r30,y
+strcspn1:
+    ld   r23,z+
+    tst  r23
+    breq strcspn3
+    cp   r22,r23
+    breq strcspn2
+    rjmp strcspn1
+strcspn3:
+    adiw r24,1
+    rjmp strcspn0
+strcspn2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+unsigned char strcspnf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+    clr  r24
+strcspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strcspnf2
+    ldd  r31,y+1
+    ld   r30,y
+    subi r31,-0x40
+strcspnf1:
+    ld   r16,z
+    tst  r16
+    breq strcspnf3
+    adiw r30,1
+    cp   r22,r16
+    breq strcspnf2
+    rjmp strcspnf1
+strcspnf3:
+    inc  r24
+    rjmp strcspnf0
+strcspnf2:
+    mov  r30,r24
+#endasm
+}
+#elif defined _MODEL_TINY_
+unsigned char strcspnf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+    clr  r24
+strcspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strcspnf2
+    ldd  r31,y+1
+    ld   r30,y
+strcspnf1:
+    lpm
+    tst  r0
+    breq strcspnf3
+    adiw r30,1
+    cp   r22,r0
+    breq strcspnf2
+    rjmp strcspnf1
+strcspnf3:
+    inc  r24
+    rjmp strcspnf0
+strcspnf2:
+    mov  r30,r24
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+unsigned int strcspnf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strcspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strcspnf2
+    ldd  r31,y+1
+    ld   r30,y
+strcspnf1:
+#endasm
+LPM_R0
+#asm
+    tst  r0
+    breq strcspnf3
+    adiw r30,1
+    cp   r22,r0
+    breq strcspnf2
+    rjmp strcspnf1
+strcspnf3:
+    adiw r24,1
+    rjmp strcspnf0
+strcspnf2:
+    movw r30,r24
+#endasm
+}
+#else
+unsigned int strcspnf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strcspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strcspnf2
+    ldd  r31,y+1
+    ld   r30,y
+strcspnf1:
+#endasm
+LPM_R0
+#asm
+    tst  r0
+    breq strcspnf3
+    adiw r30,1
+    cp   r22,r0
+    breq strcspnf2
+    rjmp strcspnf1
+strcspnf3:
+    adiw r24,1
+    rjmp strcspnf0
+strcspnf2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+unsigned int strcspnf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+    clr  r24
+    clr  r25
+strcspnf0:
+    ld   r23,x+
+    tst  r23
+    breq strcspnf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+strcspnf1:
+    out  rampz,r22
+    elpm
+    tst  r0
+    breq strcspnf3
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r23,r0
+    breq strcspnf2
+    rjmp strcspnf1
+strcspnf3:
+    adiw r24,1
+    rjmp strcspnf0
+strcspnf2:
+    movw r30,r24
+#endasm
+RESTORE_RAMPZ
+}
+#else
+unsigned int strcspnf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+    clr  r24
+    clr  r25
+strcspnf0:
+    ld   r23,x+
+    tst  r23
+    breq strcspnf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+strcspnf1:
+    out  rampz,r22
+    elpm
+    tst  r0
+    breq strcspnf3
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r23,r0
+    breq strcspnf2
+    rjmp strcspnf1
+strcspnf3:
+    adiw r24,1
+    rjmp strcspnf0
+strcspnf2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+RESTORE_RAMPZ
+}
+#endif
+#endif
+
+#pragma asm_function+
+
+#ifdef _MODEL_TINY_
+unsigned char strlen(char *str)
+{
+#asm
+    clr  r27
+    ld   r26,y+
+    clr  r30
+strlen0:
+    ld   r22,x+
+    tst  r22
+    breq strlen1
+    inc  r30
+    rjmp strlen0
+strlen1:
+    ret
+#endasm
+}
+#else
+unsigned int strlen(char *str)
+{
+#asm
+    ld   r26,y+
+    ld   r27,y+
+    clr  r30
+    clr  r31
+strlen0:
+    ld   r22,x+
+    tst  r22
+    breq strlen1
+    adiw r30,1
+    rjmp strlen0
+strlen1:
+    ret
+#endasm
+}
+#endif
+
+#ifdef _AVR8L_CORE_
+unsigned int strlenf(char flash *str)
+{
+#asm
+    clr  r26
+    clr  r27
+    ld   r30,y+
+    ld   r31,y+
+    subi r31,-0x40
+strlenf0:
+    ld   r16,z+
+    tst  r16
+    breq strlenf1
+    adiw r26,1
+    rjmp strlenf0
+strlenf1:
+    mov  r30,r26
+    mov  r31,r27
+    ret
+#endasm
+}
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+unsigned int strlenf(char flash *str)
+{
+SAVE_RAMPZ
+#asm
+    clr  r26
+    clr  r27
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    out  rampz,r22
+strlenf0:
+    elpm r0,z+
+    tst  r0
+    breq strlenf1
+    adiw r26,1
+    rjmp strlenf0
+strlenf1:
+    movw r30,r26
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+unsigned int strlenf(char flash *str)
+{
+SAVE_RAMPZ
+#asm
+    clr  r26
+    clr  r27
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+strlenf0:
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    tst  r0
+    breq strlenf1
+    adiw r26,1
+    rjmp strlenf0
+strlenf1:
+    mov  r30,r26
+    mov  r31,r27
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#else
+#ifdef _ENHANCED_CORE_
+unsigned int strlenf(char flash *str)
+{
+#asm
+    clr  r26
+    clr  r27
+    ld   r30,y+
+    ld   r31,y+
+strlenf0:
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    breq strlenf1
+    adiw r26,1
+    rjmp strlenf0
+strlenf1:
+    movw r30,r26
+    ret
+#endasm
+}
+#else
+unsigned int strlenf(char flash *str)
+{
+#asm
+    clr  r26
+    clr  r27
+    ld   r30,y+
+    ld   r31,y+
+strlenf0:
+#endasm
+LPM_R0
+#asm
+    tst  r0
+    breq strlenf1
+    adiw r26,1
+    adiw r30,1
+    rjmp strlenf0
+strlenf1:
+    mov  r30,r26
+    mov  r31,r27
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _MODEL_TINY_
+char *strncat(char *str1,char *str2,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    clr  r31
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strncat0:
+    ld   r22,x+
+    tst  r22
+    brne strncat0
+    sbiw r26,1
+strncat1:
+    st   x,r23
+    tst  r23
+    breq strncat2
+    dec  r23
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strncat1
+strncat2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strncat(char *str1,char *str2,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strncat0:
+    ld   r22,x+
+    tst  r22
+    brne strncat0
+    sbiw r26,1
+strncat1:
+    st   x,r23
+    tst  r23
+    breq strncat2
+    dec  r23
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strncat1
+strncat2:
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strncat(char *str1,char *str2,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strncat0:
+    ld   r22,x+
+    tst  r22
+    brne strncat0
+    sbiw r26,1
+strncat1:
+    st   x,r23
+    tst  r23
+    breq strncat2
+    dec  r23
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strncat1
+strncat2:
+    mov  r30,r24
+    mov  r31,r25
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+char *strncatf(char *str1,char flash *str2,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+    subi r31,-0x40
+strncatf0:
+    ld   r22,x+
+    tst  r22
+    brne strncatf0
+    sbiw r26,1
+strncatf1:
+    st   x,r23
+    tst  r23
+    breq strncatf2
+    dec  r23
+    ld   r16,z+
+    st   x+,r16
+    tst  r16
+    brne strncatf1
+strncatf2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+char *strncatf(char *str1,char flash *str2,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strncatf0:
+    ld   r22,x+
+    tst  r22
+    brne strncatf0
+    sbiw r26,1
+strncatf1:
+    st   x,r23
+    tst  r23
+    breq strncatf2
+    dec  r23
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strncatf1
+strncatf2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+char *strncatf(char *str1,char flash *str2,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strncatf0:
+    ld   r22,x+
+    tst  r22
+    brne strncatf0
+    sbiw r26,1
+strncatf1:
+    st   x,r23
+    tst  r23
+    breq strncatf2
+    dec  r23
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strncatf1
+strncatf2:
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strncatf(char *str1,char flash *str2,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strncatf0:
+    ld   r22,x+
+    tst  r22
+    brne strncatf0
+    sbiw r26,1
+strncatf1:
+    st   x,r23
+    tst  r23
+    breq strncatf2
+    dec  r23
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strncatf1
+strncatf2:
+    mov  r30,r24
+    mov  r31,r25
+    ret
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+char *strncatf(char *str1,char flash *str2,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strncatf0:
+    ld   r0,x+
+    tst  r0
+    brne strncatf0
+    sbiw r26,1
+    out  rampz,r22
+strncatf1:
+    st   x,r23
+    tst  r23
+    breq strncatf2
+    dec  r23
+    elpm r0,z+
+    st   x+,r0
+    tst  r0
+    brne strncatf1
+strncatf2:
+    movw r30,r24
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+char *strncatf(char *str1,char flash *str2,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strncatf0:
+    ld   r0,x+
+    tst  r0
+    brne strncatf0
+    sbiw r26,1
+strncatf1:
+    st   x,r23
+    tst  r23
+    breq strncatf2
+    dec  r23
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    st   x+,r0
+    tst  r0
+    brne strncatf1
+strncatf2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _MODEL_TINY_
+signed char strncmp(char *str1,char *str2,unsigned char n)
+{
+#asm
+    clr  r22
+    clr  r23
+    ld   r24,y+
+    ld   r30,y+
+    clr  r31
+    ld   r26,y+
+    clr  r27
+strncmp0:
+    tst  r24
+    breq strncmp1
+    dec  r24
+    ld   r22,x+
+    ld   r23,z+
+    cp   r22,r23
+    brne strncmp1
+    tst  r22
+    brne strncmp0
+strncmp3:
+    clr  r30
+    ret
+strncmp1:
+    sub  r22,r23
+    breq strncmp3
+    ldi  r30,1
+    brcc strncmp2
+    subi r30,2
+strncmp2:
+    ret
+#endasm
+}
+#else
+signed char strncmp(char *str1,char *str2,unsigned char n)
+{
+#asm
+    clr  r22
+    clr  r23
+    ld   r24,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+strncmp0:
+    tst  r24
+    breq strncmp1
+    dec  r24
+    ld   r22,x+
+    ld   r23,z+
+    cp   r22,r23
+    brne strncmp1
+    tst  r22
+    brne strncmp0
+strncmp3:
+    clr  r30
+    ret
+strncmp1:
+    sub  r22,r23
+    breq strncmp3
+    ldi  r30,1
+    brcc strncmp2
+    subi r30,2
+strncmp2:
+    ret
+#endasm
+}
+#endif
+
+#ifdef _AVR8L_CORE_
+signed char strncmpf(char *str1,char flash *str2,unsigned char n)
+{
+#asm
+    clr  r16
+    clr  r17
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    subi r31,-0x40
+strncmpf0:
+    tst  r22
+    breq strncmpf1
+    dec  r22
+    ld   r17,x+
+    ld   r16,z+
+    cp   r16,r17
+    brne strncmpf1
+    tst  r16
+    brne strncmpf0
+strncmpf3:
+    clr  r30
+    ret
+strncmpf1:
+    sub  r17,r16
+    breq strncmpf3
+    ldi  r30,1
+    brcc strncmpf2
+    subi r30,2
+strncmpf2:
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+signed char strncmpf(char *str1,char flash *str2,unsigned char n)
+{
+#asm
+    clr  r0
+    clr  r1
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+strncmpf0:
+    tst  r22
+    breq strncmpf1
+    dec  r22
+    ld   r1,x+
+#endasm
+LPM_R0_INC
+#asm
+    cp   r0,r1
+    brne strncmpf1
+    tst  r0
+    brne strncmpf0
+strncmpf3:
+    clr  r30
+    ret
+strncmpf1:
+    sub  r1,r0
+    breq strncmpf3
+    ldi  r30,1
+    brcc strncmpf2
+    subi r30,2
+strncmpf2:
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+signed char strncmpf(char *str1,char flash *str2,unsigned char n)
+{
+#asm
+    clr  r0
+    clr  r1
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+strncmpf0:
+    tst  r22
+    breq strncmpf1
+    dec  r22
+    ld   r1,x+
+#endasm
+LPM_R0_INC
+#asm
+    cp   r0,r1
+    brne strncmpf1
+    tst  r0
+    brne strncmpf0
+strncmpf3:
+    clr  r30
+    ret
+strncmpf1:
+    sub  r1,r0
+    breq strncmpf3
+    ldi  r30,1
+    brcc strncmpf2
+    subi r30,2
+strncmpf2:
+    ret
+#endasm
+}
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+signed char strncmpf(char *str1,char flash *str2,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r0
+    clr  r1
+    out  rampz,r22
+strncmpf0:
+    tst  r23
+    breq strncmpf1
+    dec  r23
+    ld   r1,x+
+    elpm r0,z+
+    cp   r0,r1
+    brne strncmpf1
+    tst  r0
+    brne strncmpf0
+strncmpf3:
+    clr  r30
+    rjmp strncmpf2
+strncmpf1:
+    sub  r1,r0
+    breq strncmpf3
+    ldi  r30,1
+    brcc strncmpf2
+    subi r30,2
+strncmpf2:
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+signed char strncmpf(char *str1,char flash *str2,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r0
+    clr  r1
+strncmpf0:
+    tst  r23
+    breq strncmpf1
+    dec  r23
+    ld   r1,x+
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r0,r1
+    brne strncmpf1
+    tst  r0
+    brne strncmpf0
+strncmpf3:
+    clr  r30
+    rjmp strncmpf2
+strncmpf1:
+    sub  r1,r0
+    breq strncmpf3
+    ldi  r30,1
+    brcc strncmpf2
+    subi r30,2
+strncmpf2:
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _MODEL_TINY_
+char *strncpy(char *dest,char *src,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    clr  r31
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strncpy0:
+    tst  r23
+    breq strncpy1
+    dec  r23
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strncpy0
+strncpy2:
+    tst  r23
+    breq strncpy1
+    dec  r23
+    st   x+,r22
+    rjmp strncpy2
+strncpy1:
+    mov  r30,r24
+    ret
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strncpy(char *dest,char *src,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strncpy0:
+    tst  r23
+    breq strncpy1
+    dec  r23
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strncpy0
+strncpy2:
+    tst  r23
+    breq strncpy1
+    dec  r23
+    st   x+,r22
+    rjmp strncpy2
+strncpy1:
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strncpy(char *dest,char *src,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strncpy0:
+    tst  r23
+    breq strncpy1
+    dec  r23
+    ld   r22,z+
+    st   x+,r22
+    tst  r22
+    brne strncpy0
+strncpy2:
+    tst  r23
+    breq strncpy1
+    dec  r23
+    st   x+,r22
+    rjmp strncpy2
+strncpy1:
+    mov  r30,r24
+    mov  r31,r25
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+char *strncpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+    subi r31,-0x40
+strncpyf0:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+    ld   r16,z+
+    st   x+,r16
+    tst  r16
+    brne strncpyf0
+strncpyf2:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+    st   x+,r16
+    rjmp strncpyf2
+strncpyf1:
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+char *strncpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    mov  r24,r26
+strncpyf0:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strncpyf0
+strncpyf2:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+    st   x+,r0
+    rjmp strncpyf2
+strncpyf1:
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+char *strncpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+strncpyf0:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strncpyf0
+strncpyf2:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+    st   x+,r0
+    rjmp strncpyf2
+strncpyf1:
+    movw r30,r24
+    ret
+#endasm
+}
+#else
+char *strncpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strncpyf0:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+#endasm
+LPM_R0_INC
+#asm
+    st   x+,r0
+    tst  r0
+    brne strncpyf0
+strncpyf2:
+    tst  r22
+    breq strncpyf1
+    dec  r22
+    st   x+,r0
+    rjmp strncpyf2
+strncpyf1:
+    mov  r30,r24
+    mov  r31,r25
+    ret
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+char *strncpyf(char *dest,char flash *src,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    movw r24,r26
+    out  rampz,r22
+strncpyf0:
+    tst  r23
+    breq strncpyf1
+    dec  r23
+    elpm r0,z+
+    st   x+,r0
+    tst  r0
+    brne strncpyf0
+strncpyf2:
+    tst  r23
+    breq strncpyf1
+    dec  r23
+    st   x+,r0
+    rjmp strncpyf2
+strncpyf1:
+    movw r30,r24
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+char *strncpyf(char *dest,char flash *src,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    mov  r24,r26
+    mov  r25,r27
+strncpyf0:
+    tst  r23
+    breq strncpyf1
+    dec  r23
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    st   x+,r0
+    tst  r0
+    brne strncpyf0
+strncpyf2:
+    tst  r23
+    breq strncpyf1
+    dec  r23
+    st   x+,r0
+    rjmp strncpyf2
+strncpyf1:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+
+// Corrected by SA 06.06.2009/12.08.2010
+// Corrected & optimized for speed by HP 06.09.2010
+// HP 06032012_1 - fixed: copies max. n-1 characters
+#ifdef _MODEL_TINY_
+unsigned char strlcpy(char *dest,char *src,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    clr  r31
+    ld   r26,y+
+    clr  r27
+    clr  r24
+    tst  r23
+    breq strlcpy1
+strlcpy0:
+    dec  r23
+    breq strlcpy1
+    ld   r22,z+
+    tst  r22
+    st   x+,r22
+    breq strlcpy2
+    inc  r24
+    rjmp strlcpy0
+strlcpy1:
+    st	 x,r23
+strlcpy2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+unsigned char strlcpy(char *dest,char *src,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r24
+    tst  r23
+    breq strlcpy1
+strlcpy0:
+    dec  r23
+    breq strlcpy1
+    ld   r22,z+
+    tst  r22
+    st   x+,r22
+    breq strlcpy2
+    inc  r24
+    rjmp strlcpy0
+strlcpy1:
+    st   x,r23
+strlcpy2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#else
+unsigned char strlcpy(char *dest,char *src,unsigned char n)
+{
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r24
+    tst  r23
+    breq strlcpy1
+strlcpy0:
+    dec  r23
+    breq strlcpy1
+    ld   r22,z+
+    tst  r22
+    st   x+,r22
+    breq strlcpy2
+    inc  r24
+    rjmp strlcpy0
+strlcpy1:
+    st   x,r23
+strlcpy2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+unsigned char strlcpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    clr  r24
+    subi r31,-0x40
+    tst  r22
+    breq strlcpyf1
+strlcpyf0:
+    dec  r22
+    breq strlcpyf1
+    ld   r16,z+
+    tst  r16
+    st   x+,r16
+    breq strlcpyf2
+    inc  r24
+    rjmp strlcpyf0
+strlcpyf1:
+    st   x,r22
+strlcpyf2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_TINY_
+unsigned char strlcpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    clr  r27
+    clr  r24
+    tst  r22
+    breq strlcpyf1
+strlcpyf0:
+    dec  r22
+    breq strlcpyf1
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    st   x+,r0
+    breq strlcpyf2
+    inc  r24
+    rjmp strlcpyf0
+strlcpyf1:
+    st   x,r22
+strlcpyf2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+unsigned char strlcpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r24
+    tst  r22
+    breq strlcpyf1
+strlcpyf0:
+    dec  r22
+    breq strlcpyf1
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    st   x+,r0
+    breq strlcpyf2
+    inc  r24
+    rjmp strlcpyf0
+strlcpyf1:
+    st   x,r22
+strlcpyf2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#else
+unsigned char strlcpyf(char *dest,char flash *src,unsigned char n)
+{
+#asm
+    ld   r22,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r24
+    tst  r22
+    breq strlcpyf1
+strlcpyf0:
+    dec  r22
+    breq strlcpyf1
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    st   x+,r0
+    breq strlcpyf2
+    inc  r24
+    rjmp strlcpyf0
+strlcpyf1:
+    st   x,r22
+strlcpyf2:
+    mov  r30,r24
+    ret
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+unsigned char strlcpyf(char *dest,char flash *src,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r24
+    out  rampz,r22
+    tst  r23
+    breq strlcpyf1
+strlcpyf0:
+    dec  r23
+    breq strlcpyf1
+    elpm r0,z+
+    tst  r0
+    st   x+,r0
+    breq strlcpyf2
+    inc  r24
+    rjmp strlcpyf0
+strlcpyf1:
+    st   x,r23
+strlcpyf2:
+    mov  r30,r24
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#else
+unsigned char strlcpyf(char *dest,char flash *src,unsigned char n)
+{
+SAVE_RAMPZ
+#asm
+    ld   r23,y+
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r0,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r24
+    tst  r23
+    breq strlcpyf1
+strlcpyf0:
+    dec  r23
+    breq strlcpyf1
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    tst  r0
+    st   x+,r0
+    breq strlcpyf2
+    inc  r24
+    rjmp strlcpyf0
+strlcpyf1:
+    st   x,r23
+strlcpyf2:
+    mov  r30,r24
+#endasm
+RESTORE_RAMPZ
+#asm
+    ret
+#endasm
+}
+#endif
+#endif
+// end of correction -------------------------------------------------------------------------------
+
+#pragma asm_function-
+
+#ifdef _MODEL_TINY_
+char *strpbrk(char *str,char *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+1
+strpbrk0:
+    ld   r22,x
+    tst  r22
+    breq strpbrk2
+    clr  r31
+    ld   r30,y
+strpbrk1:
+    ld   r23,z+
+    tst  r23
+    breq strpbrk3
+    cp   r22,r23
+    brne strpbrk1
+    mov  r30,r26
+    rjmp strpbrk4
+strpbrk3:
+    adiw r26,1
+    rjmp strpbrk0
+strpbrk2:
+    clr  r30
+strpbrk4:
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strpbrk(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+strpbrk0:
+    ld   r22,x
+    tst  r22
+    breq strpbrk2
+    ldd  r31,y+1
+    ld   r30,y
+strpbrk1:
+    ld   r23,z+
+    tst  r23
+    breq strpbrk3
+    cp   r22,r23
+    brne strpbrk1
+    movw r30,r26
+    rjmp strpbrk4
+strpbrk3:
+    adiw r26,1
+    rjmp strpbrk0
+strpbrk2:
+    clr  r30
+    clr  r31
+strpbrk4:
+#endasm
+}
+#else
+char *strpbrk(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+strpbrk0:
+    ld   r22,x
+    tst  r22
+    breq strpbrk2
+    ldd  r31,y+1
+    ld   r30,y
+strpbrk1:
+    ld   r23,z+
+    tst  r23
+    breq strpbrk3
+    cp   r22,r23
+    brne strpbrk1
+    mov  r30,r26
+    mov  r31,r27
+    rjmp strpbrk4
+strpbrk3:
+    adiw r26,1
+    rjmp strpbrk0
+strpbrk2:
+    clr  r30
+    clr  r31
+strpbrk4:
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+char *strpbrkf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+strpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+    subi r31,-0x40
+strpbrkf1:
+    ld   r16,z
+    tst  r16
+    breq strpbrkf3
+    adiw r30,1
+    cp   r22,r16
+    brne strpbrkf1
+    mov  r30,r26
+    rjmp strpbrkf4
+strpbrkf3:
+    adiw r26,1
+    rjmp strpbrkf0
+strpbrkf2:
+    clr  r30
+strpbrkf4:
+#endasm
+}
+#elif defined _MODEL_TINY_
+char *strpbrkf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+strpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+strpbrkf1:
+    lpm
+    tst  r0
+    breq strpbrkf3
+    adiw r30,1
+    cp   r22,r0
+    brne strpbrkf1
+    mov  r30,r26
+    rjmp strpbrkf4
+strpbrkf3:
+    adiw r26,1
+    rjmp strpbrkf0
+strpbrkf2:
+    clr  r30
+strpbrkf4:
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+char *strpbrkf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+strpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+strpbrkf1:
+#endasm
+LPM_R0
+#asm
+    tst  r0
+    breq strpbrkf3
+    adiw r30,1
+    cp   r22,r0
+    brne strpbrkf1
+    movw r30,r26
+    rjmp strpbrkf4
+strpbrkf3:
+    adiw r26,1
+    rjmp strpbrkf0
+strpbrkf2:
+    clr  r30
+    clr  r31
+strpbrkf4:
+#endasm
+}
+#else
+char *strpbrkf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+strpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+strpbrkf1:
+#endasm
+LPM_R0
+#asm
+    tst  r0
+    breq strpbrkf3
+    adiw r30,1
+    cp   r22,r0
+    brne strpbrkf1
+    mov  r30,r26
+    mov  r31,r27
+    rjmp strpbrkf4
+strpbrkf3:
+    adiw r26,1
+    rjmp strpbrkf0
+strpbrkf2:
+    clr  r30
+    clr  r31
+strpbrkf4:
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+char *strpbrkf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+strpbrkf0:
+    ld   r23,x
+    tst  r23
+    breq strpbrkf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+strpbrkf1:
+    out  rampz,r22
+    elpm
+    tst  r0
+    breq strpbrkf3
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r23,r0
+    brne strpbrkf1
+    movw r30,r26
+    rjmp strpbrkf4
+strpbrkf3:
+    adiw r26,1
+    rjmp strpbrkf0
+strpbrkf2:
+    clr  r30
+    clr  r31
+strpbrkf4:
+#endasm
+RESTORE_RAMPZ
+}
+#else
+char *strpbrkf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+strpbrkf0:
+    ld   r23,x
+    tst  r23
+    breq strpbrkf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+strpbrkf1:
+    out  rampz,r22
+    elpm
+    tst  r0
+    breq strpbrkf3
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r23,r0
+    brne strpbrkf1
+    mov  r30,r26
+    mov  r31,r27
+    rjmp strpbrkf4
+strpbrkf3:
+    adiw r26,1
+    rjmp strpbrkf0
+strpbrkf2:
+    clr  r30
+    clr  r31
+strpbrkf4:
+#endasm
+RESTORE_RAMPZ
+}
+#endif
+#endif
+
+#pragma asm_function+
+
+#ifdef _MODEL_TINY_
+signed char strpos(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    clr  r27
+    clr  r30
+strpos0:
+    ld   r23,x+
+    cp   r22,r23
+    breq strpos1
+    inc  r30
+    tst  r23
+    brne strpos0
+    ldi  r30,-1
+strpos1:
+    ret
+#endasm
+}
+#else
+int strpos(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r30
+    clr  r31
+strpos0:
+    ld   r23,x+
+    cp   r22,r23
+    breq strpos1
+    adiw r30,1
+    tst  r23
+    brne strpos0
+    ldi  r30,0xff
+    ldi  r31,0xff
+strpos1:
+    ret
+#endasm
+}
+#endif
+
+#ifdef _MODEL_TINY_
+char *strrchr(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    clr  r27
+    clr  r30
+strrchr0:
+    ld   r23,x
+    cp   r22,r23
+    brne strrchr1
+    mov  r30,r26
+strrchr1:
+    adiw r26,1
+    tst  r23
+    brne strrchr0
+    ret
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strrchr(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r30
+    clr  r31
+strrchr0:
+    ld   r23,x
+    cp   r22,r23
+    brne strrchr1
+    movw r30,r26
+strrchr1:
+    adiw r26,1
+    tst  r23
+    brne strrchr0
+    ret
+#endasm
+}
+#else
+char *strrchr(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    ld   r27,y+
+    clr  r30
+    clr  r31
+strrchr0:
+    ld   r23,x
+    cp   r22,r23
+    brne strrchr1
+    mov  r30,r26
+    mov  r31,r27
+strrchr1:
+    adiw r26,1
+    tst  r23
+    brne strrchr0
+    ret
+#endasm
+}
+#endif
+#endif
+
+#pragma asm_function-
+
+// 23012016_2
+flash char *strrchrf(flash char *str,char c)
+{
+flash char *p=NULL;
+char k;
+#pragma warn-
+while (k=*str)
+#pragma warn_default 
+      {
+      if (k==c) p=str;
+      ++str;
+      }
+return p;
+}
+
+#ifdef _MODEL_TINY_
+char *strrpbrk(char *str,char *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+1
+    clr  r24
+strrpbrk0:
+    ld   r22,x
+    tst  r22
+    breq strrpbrk2
+    clr  r31
+    ld   r30,y
+strrpbrk1:
+    ld   r23,z+
+    tst  r23
+    breq strrpbrk3
+    cp   r22,r23
+    brne strrpbrk1
+    mov  r24,r26
+strrpbrk3:
+    adiw r26,1
+    rjmp strrpbrk0
+strrpbrk2:
+    mov  r30,r24
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strrpbrk(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r25
+    clr  r24
+strrpbrk0:
+    ld   r22,x
+    tst  r22
+    breq strrpbrk2
+    ldd  r31,y+1
+    ld   r30,y
+strrpbrk1:
+    ld   r23,z+
+    tst  r23
+    breq strrpbrk3
+    cp   r22,r23
+    brne strrpbrk1
+    movw r24,r26
+strrpbrk3:
+    adiw r26,1
+    rjmp strrpbrk0
+strrpbrk2:
+    movw r30,r24
+#endasm
+}
+#else
+char *strrpbrk(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r25
+    clr  r24
+strrpbrk0:
+    ld   r22,x
+    tst  r22
+    breq strrpbrk2
+    ldd  r31,y+1
+    ld   r30,y
+strrpbrk1:
+    ld   r23,z+
+    tst  r23
+    breq strrpbrk3
+    cp   r22,r23
+    brne strrpbrk1
+    mov  r24,r26
+    mov  r25,r27
+strrpbrk3:
+    adiw r26,1
+    rjmp strrpbrk0
+strrpbrk2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+char *strrpbrkf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+    clr  r24
+strrpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strrpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+    subi r31,-0x40
+strrpbrkf1:
+    ld   r16,z
+    tst  r16
+    breq strrpbrkf3
+    adiw r30,1
+    cp   r22,r16
+    brne strrpbrkf1
+    mov  r24,r26
+strrpbrkf3:
+    adiw r26,1
+    rjmp strrpbrkf0
+strrpbrkf2:
+    mov  r30,r24
+#endasm
+}
+#elif defined _MODEL_TINY_
+char *strrpbrkf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+    clr  r24
+strrpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strrpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+strrpbrkf1:
+    lpm
+    tst  r0
+    breq strrpbrkf3
+    adiw r30,1
+    cp   r22,r0
+    brne strrpbrkf1
+    mov  r24,r26
+strrpbrkf3:
+    adiw r26,1
+    rjmp strrpbrkf0
+strrpbrkf2:
+    mov  r30,r24
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+char *strrpbrkf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r25
+    clr  r24
+strrpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strrpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+strrpbrkf1:
+#endasm
+LPM_R0
+#asm
+    tst  r0
+    breq strrpbrkf3
+    adiw r30,1
+    cp   r22,r0
+    brne strrpbrkf1
+    movw r24,r26
+strrpbrkf3:
+    adiw r26,1
+    rjmp strrpbrkf0
+strrpbrkf2:
+    movw r30,r24
+#endasm
+}
+#else
+char *strrpbrkf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r25
+    clr  r24
+strrpbrkf0:
+    ld   r22,x
+    tst  r22
+    breq strrpbrkf2
+    ldd  r31,y+1
+    ld   r30,y
+strrpbrkf1:
+#endasm
+LPM_R0
+#asm
+    tst  r0
+    breq strrpbrkf3
+    adiw r30,1
+    cp   r22,r0
+    brne strrpbrkf1
+    mov  r24,r26
+    mov  r25,r27
+strrpbrkf3:
+    adiw r26,1
+    rjmp strrpbrkf0
+strrpbrkf2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+char *strrpbrkf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+    clr  r25
+    clr  r24
+strrpbrkf0:
+    ld   r23,x
+    tst  r23
+    breq strrpbrkf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+strrpbrkf1:
+    out  rampz,r22
+    elpm
+    tst  r0
+    breq strrpbrkf3
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r23,r0
+    brne strrpbrkf1
+    movw r24,r26
+strrpbrkf3:
+    adiw r26,1
+    rjmp strrpbrkf0
+strrpbrkf2:
+    movw r30,r24
+#endasm
+RESTORE_RAMPZ
+}
+#else
+char *strrpbrkf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+    clr  r25
+    clr  r24
+strrpbrkf0:
+    ld   r23,x
+    tst  r23
+    breq strrpbrkf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+strrpbrkf1:
+    out  rampz,r22
+    elpm
+    tst  r0
+    breq strrpbrkf3
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r23,r0
+    brne strrpbrkf1
+    mov  r24,r26
+    mov  r25,r27
+strrpbrkf3:
+    adiw r26,1
+    rjmp strrpbrkf0
+strrpbrkf2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+RESTORE_RAMPZ
+}
+#endif
+#endif
+
+#pragma asm_function+
+
+#ifdef _MODEL_TINY_
+signed char strrpos(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    clr  r27
+    ldi  r30,-1
+    clr  r31
+strrpos0:
+    ld   r23,x+
+    cp   r22,r23
+    brne strrpos1
+    mov  r30,r31
+strrpos1:
+    inc  r31
+    tst  r23
+    brne strrpos0
+    ret
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+int strrpos(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    ld   r27,y+
+    ldi  r30,0xff
+    ldi  r31,0xff
+    clr  r24
+    clr  r25
+strrpos0:
+    ld   r23,x+
+    cp   r22,r23
+    brne strrpos1
+    movw r30,r24
+strrpos1:
+    adiw r24,1
+    tst  r23
+    brne strrpos0
+    ret
+#endasm
+}
+#else
+int strrpos(char *str,char c)
+{
+#asm
+    ld   r22,y+
+    ld   r26,y+
+    ld   r27,y+
+    ldi  r30,0xff
+    ldi  r31,0xff
+    clr  r24
+    clr  r25
+strrpos0:
+    ld   r23,x+
+    cp   r22,r23
+    brne strrpos1
+    mov  r30,r24
+    mov  r31,r25
+strrpos1:
+    adiw r24,1
+    tst  r23
+    brne strrpos0
+    ret
+#endasm
+}
+#endif
+#endif
+
+#pragma asm_function-
+
+#ifdef _MODEL_TINY_
+char *strstr(char *str1,char *str2)
+{
+#asm
+    ldd  r26,y+1
+    clr  r27
+    mov  r24,r26
+strstr0:
+    ld   r30,y
+    clr  r31
+strstr1:
+    ld   r23,z+
+    tst  r23
+    brne strstr2
+    mov  r30,r24
+    rjmp strstr3
+strstr2:
+    ld   r22,x+
+    cp   r22,r23
+    breq strstr1
+    inc  r24
+    mov  r26,r24
+    tst  r22
+    brne strstr0
+    clr  r30
+strstr3:
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+char *strstr(char *str1,char *str2)
+{
+#asm
+    ldd  r26,y+2
+    ldd  r27,y+3
+    movw r24,r26
+strstr0:
+    ld   r30,y
+    ldd  r31,y+1
+strstr1:
+    ld   r23,z+
+    tst  r23
+    brne strstr2
+    movw r30,r24
+    rjmp strstr3
+strstr2:
+    ld   r22,x+
+    cp   r22,r23
+    breq strstr1
+    adiw r24,1
+    movw r26,r24
+    tst  r22
+    brne strstr0
+    clr  r30
+    clr  r31
+strstr3:
+#endasm
+}
+#else
+char *strstr(char *str1,char *str2)
+{
+#asm
+    ldd  r26,y+2
+    ldd  r27,y+3
+    mov  r24,r26
+    mov  r25,r27
+strstr0:
+    ld   r30,y
+    ldd  r31,y+1
+strstr1:
+    ld   r23,z+
+    tst  r23
+    brne strstr2
+    mov  r30,r24
+    mov  r31,r25
+    rjmp strstr3
+strstr2:
+    ld   r22,x+
+    cp   r22,r23
+    breq strstr1
+    adiw r24,1
+    mov  r26,r24
+    mov  r27,r25
+    tst  r22
+    brne strstr0
+    clr  r30
+    clr  r31
+strstr3:
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+char *strstrf(char *str1,char flash *str2)
+{
+#asm
+    ldd  r26,y+2
+    clr  r27
+    mov  r24,r26
+strstrf0:
+    ld   r30,y
+    ldd  r31,y+1
+    subi r31,-0x40
+strstrf1:
+    ld   r16,z
+    tst  r16
+    brne strstrf2
+    mov  r30,r24
+    rjmp strstrf3
+strstrf2:
+    ld   r22,x+
+    cp   r22,r16
+    breq strstrf1
+    inc  r24
+    mov  r26,r24
+    tst  r22
+    brne strstrf0
+    clr  r30
+strstrf3:
+#endasm
+}
+#elif defined _MODEL_TINY_
+char *strstrf(char *str1,char flash *str2)
+{
+#asm
+    ldd  r26,y+2
+    clr  r27
+    mov  r24,r26
+strstrf0:
+    ld   r30,y
+    ldd  r31,y+1
+strstrf1:
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    brne strstrf2
+    mov  r30,r24
+    rjmp strstrf3
+strstrf2:
+    ld   r22,x+
+    cp   r22,r0
+    breq strstrf1
+    inc  r24
+    mov  r26,r24
+    tst  r22
+    brne strstrf0
+    clr  r30
+strstrf3:
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+char *strstrf(char *str1,char flash *str2)
+{
+#asm
+    ldd  r26,y+2
+    ldd  r27,y+3
+    movw r24,r26
+strstrf0:
+    ld   r30,y
+    ldd  r31,y+1
+strstrf1:
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    brne strstrf2
+    movw r30,r24
+    rjmp strstrf3
+strstrf2:
+    ld   r22,x+
+    cp   r22,r0
+    breq strstrf1
+    adiw r24,1
+    movw r26,r24
+    tst  r22
+    brne strstrf0
+    clr  r30
+    clr  r31
+strstrf3:
+#endasm
+}
+#else
+char *strstrf(char *str1,char flash *str2)
+{
+#asm
+    ldd  r26,y+2
+    ldd  r27,y+3
+    mov  r24,r26
+    mov  r25,r27
+strstrf0:
+    ld   r30,y
+    ldd  r31,y+1
+strstrf1:
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    brne strstrf2
+    mov  r30,r24
+    mov  r31,r25
+    rjmp strstrf3
+strstrf2:
+    ld   r22,x+
+    cp   r22,r0
+    breq strstrf1
+    adiw r24,1
+    mov  r26,r24
+    mov  r27,r25
+    tst  r22
+    brne strstrf0
+    clr  r30
+    clr  r31
+strstrf3:
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+char *strstrf(char *str1,char flash *str2)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r26,y+4
+    ldd  r27,y+5
+    movw r24,r26
+strstrf0:
+    ld   r30,y
+    ldd  r31,y+1
+    ldd  r22,y+2
+    out  rampz,r22
+strstrf1:
+    elpm r0,z+
+    tst  r0
+    brne strstrf2
+    movw r30,r24
+    rjmp strstrf3
+strstrf2:
+    ld   r1,x+
+    cp   r1,r0
+    breq strstrf1
+    adiw r24,1
+    movw r26,r24
+    tst  r1
+    brne strstrf0
+    clr  r30
+    clr  r31
+strstrf3:
+#endasm
+RESTORE_RAMPZ
+}
+#else
+char *strstrf(char *str1,char flash *str2)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r26,y+4
+    ldd  r27,y+5
+    mov  r24,r26
+    mov  r25,r27
+strstrf0:
+    ld   r30,y
+    ldd  r31,y+1
+    ldd  r22,y+2
+strstrf1:
+    out  rampz,r22
+    elpm
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    tst  r0
+    brne strstrf2
+    mov  r30,r24
+    mov  r31,r25
+    rjmp strstrf3
+strstrf2:
+    ld   r1,x+
+    cp   r1,r0
+    breq strstrf1
+    adiw r24,1
+    mov  r26,r24
+    mov  r27,r25
+    tst  r1
+    brne strstrf0
+    clr  r30
+    clr  r31
+strstrf3:
+#endasm
+RESTORE_RAMPZ
+}
+#endif
+#endif
+
+#ifdef _MODEL_TINY_
+unsigned char strspn(char *str,char *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+1
+    clr  r24
+strspn0:
+    ld   r22,x+
+    tst  r22
+    breq strspn2
+    clr  r31
+    ld   r30,y
+strspn1:
+    ld   r23,z+
+    tst  r23
+    breq strspn2
+    cp   r22,r23
+    brne strspn1
+    inc  r24
+    rjmp strspn0
+strspn2:
+    mov  r30,r24
+#endasm
+}
+#else
+#ifdef _ENHANCED_CORE_
+unsigned int strspn(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strspn0:
+    ld   r22,x+
+    tst  r22
+    breq strspn2
+    ldd  r31,y+1
+    ld   r30,y
+strspn1:
+    ld   r23,z+
+    tst  r23
+    breq strspn2
+    cp   r22,r23
+    brne strspn1
+    adiw r24,1
+    rjmp strspn0
+strspn2:
+    movw r30,r24
+#endasm
+}
+#else
+unsigned int strspn(char *str,char *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strspn0:
+    ld   r22,x+
+    tst  r22
+    breq strspn2
+    ldd  r31,y+1
+    ld   r30,y
+strspn1:
+    ld   r23,z+
+    tst  r23
+    breq strspn2
+    cp   r22,r23
+    brne strspn1
+    adiw r24,1
+    rjmp strspn0
+strspn2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+}
+#endif
+#endif
+
+#ifdef _AVR8L_CORE_
+unsigned char strspnf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+    clr  r24
+strspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strspnf2
+    ldd  r31,y+1
+    ld   r30,y
+    subi r31,-0x40
+strspnf1:
+    ld   r16,z
+    tst  r16
+    breq strspnf2
+    cp   r22,r16
+    brne strspnf1
+    inc  r24
+    rjmp strspnf0
+strspnf2:
+    mov  r30,r24
+#endasm
+}
+#elif defined _MODEL_TINY_
+unsigned char strspnf(char *str,char flash *set)
+{
+#asm
+    clr  r27
+    ldd  r26,y+2
+    clr  r24
+strspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strspnf2
+    ldd  r31,y+1
+    ld   r30,y
+strspnf1:
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    breq strspnf2
+    cp   r22,r0
+    brne strspnf1
+    inc  r24
+    rjmp strspnf0
+strspnf2:
+    mov  r30,r24
+#endasm
+}
+#elif defined _MODEL_SMALL_
+#ifdef _ENHANCED_CORE_
+unsigned int strspnf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strspnf2
+    ldd  r31,y+1
+    ld   r30,y
+strspnf1:
+#endasm
+LPM_R0_INC
+#asm
+    tst  r0
+    breq strspnf2
+    cp   r22,r0
+    brne strspnf1
+    adiw r24,1
+    rjmp strspnf0
+strspnf2:
+    movw r30,r24
+#endasm
+}
+#else
+unsigned int strspnf(char *str,char flash *set)
+{
+#asm
+    ldd  r27,y+3
+    ldd  r26,y+2
+    clr  r24
+    clr  r25
+strspnf0:
+    ld   r22,x+
+    tst  r22
+    breq strspnf2
+    ldd  r31,y+1
+    ld   r30,y
+strspnf1:
+#endasm
+LPM_R0_INC
+#asm
+    breq strspnf2
+    adiw r30,1
+    cp   r22,r0
+    brne strspnf1
+    adiw r24,1
+    rjmp strspnf0
+strspnf2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+}
+#endif
+#elif defined _MODEL_MEDIUM_ | defined _MODEL_LARGE_
+#ifdef _ENHANCED_CORE_
+unsigned int strspnf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+    clr  r24
+    clr  r25
+strspnf0:
+    ld   r23,x+
+    tst  r23
+    breq strspnf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+    out  rampz,r22
+strspnf1:
+    elpm r0,z+
+    tst  r0
+    breq strspnf2
+    cp   r23,r0
+    brne strspnf1
+    adiw r24,1
+    rjmp strspnf0
+strspnf2:
+    movw r30,r24
+#endasm
+RESTORE_RAMPZ
+}
+#else
+unsigned int strspnf(char *str,char flash *set)
+{
+SAVE_RAMPZ
+#asm
+    ldd  r27,y+5
+    ldd  r26,y+4
+    clr  r24
+    clr  r25
+strspnf0:
+    ld   r23,x+
+    tst  r23
+    breq strspnf2
+    ldd  r22,y+2
+    ldd  r31,y+1
+    ld   r30,y
+strspnf1:
+    out  rampz,r22
+    elpm
+    tst  r0
+    breq strspnf2
+    subi r30,255
+    sbci r31,255
+    sbci r22,255
+    cp   r23,r0
+    brne strspnf1
+    adiw r24,1
+    rjmp strspnf0
+strspnf2:
+    mov  r30,r24
+    mov  r31,r25
+#endasm
+RESTORE_RAMPZ
+}
+#endif
+#endif
+
+#pragma dstack_par-
+
+char *strtok(char *str1,char flash *str2)
+{
+static char *p=NULL;
+char *t;
+if (str1==NULL)
+   {
+   if (p==NULL) return NULL;
+   str1=p;
+   };
+str1=str1+strspnf(str1,str2);
+if (!*str1) {p=NULL; return NULL;};
+if (t=strpbrkf(str1,str2)) *t++=0;
+p=t;
+return str1;
+}
+
+#ifdef _WARNINGS_ON_
+#pragma warn+
+#endif
+

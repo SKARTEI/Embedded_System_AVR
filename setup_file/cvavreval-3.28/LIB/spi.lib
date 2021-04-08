@@ -1,0 +1,75 @@
+/*
+  CodeVisionAVR V2.04.5 C Compiler
+  (C) 1998-2009 Pavel Haiduc, HP InfoTech S.R.L.
+
+  SPI access function
+*/
+
+#include <io.h>
+#include <stdbool.h>
+
+#ifdef _ATXMEGA_DEVICE_
+// ATxmega chips
+unsigned char spi(unsigned char data)
+{
+_ATXMEGA_SPI_.DATA=data;
+while ((_ATXMEGA_SPI_.STATUS & SPI_IF_bm)==0);
+return _ATXMEGA_SPI_.DATA;
+}
+
+void spi_init(bool master_mode,bool lsb_first,SPI_MODE_t mode,bool clk2x,SPI_PRESCALER_t clock_div, unsigned char ss_pin)
+{
+if (master_mode)
+   {
+   // Init SS pin as output with wired AND and pull-up
+   _ATXMEGA_SPI_PORT_.DIRSET=ss_pin;
+   _ATXMEGA_SPI_PORT_.PIN4CTRL=PORT_OPC_WIREDANDPULL_gc;
+
+   // Set SS output to high
+   _ATXMEGA_SPI_PORT_.OUTSET=ss_pin;
+
+   // SPI master mode
+   _ATXMEGA_SPI_.CTRL=clock_div |                      // SPI prescaler.
+                      (clk2x ? SPI_CLK2X_bm : 0) |     // SPI Clock double.
+                      SPI_ENABLE_bm |                  // Enable SPI module.
+                      (lsb_first ? SPI_DORD_bm : 0) |  // Data order.
+                      SPI_MASTER_bm |                  // SPI master.
+                      mode;                            // SPI mode.
+
+   // MOSI and SCK as output
+   _ATXMEGA_SPI_PORT_.DIRSET=SPI_MOSI_bm | SPI_SCK_bm;
+   }
+else
+   {
+   // SPI slave mode
+   _ATXMEGA_SPI_.CTRL=SPI_ENABLE_bm |                 // Enable SPI module.
+                      (lsb_first ? SPI_DORD_bm : 0) | // Data order.
+	                  mode;                           // SPI mode.
+
+   // MISO as output
+   _ATXMEGA_SPI_PORT_.DIRSET=SPI_MISO_bm;
+   };
+
+// No interrupts, polled mode
+_ATXMEGA_SPI_.INTCTRL=SPI_INTLVL_OFF_gc;
+}
+
+#else
+
+#ifndef SPIF
+#define SPIF 7
+#endif
+
+#pragma optsize-
+unsigned char spi(unsigned char data)
+{
+SPDR=data;
+while ((SPSR & (1<<SPIF))==0);
+return SPDR;
+}
+
+#ifdef _OPTIMIZE_SIZE_
+#pragma optsize+
+#endif
+
+#endif

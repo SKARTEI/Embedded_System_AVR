@@ -1,0 +1,879 @@
+/*
+CodeVisionAVR C Compiler V3.16+
+Mathematical functions
+
+(C) 2000-2014 Pavel Haiduc, HP InfoTech S.R.L.
+portions (C) 2000-2001 Yuri G. Salov
+isqrt & lsqrt functions based on code kindly provided by Lukasz Ochman
+*/
+
+#if __CODEVISIONAVR__ < 3160
+#error math.lib is requires to be used with CodeVisionAVR V3.16 or later
+#endif
+
+#include <stdlib.h>
+
+#ifndef PI
+#define PI 3.141592654
+#endif
+
+#ifndef HUGE_VAL
+#define HUGE_VAL 3.402823466e+38F
+#endif
+
+extern float ldexp(float x,int expon);
+extern float frexp(float x,int *expon);
+extern float sqrt(float x);
+
+#pragma dstack_par+
+
+#pragma asm_function+
+signed char cmax(signed char a,signed char b)
+{
+#asm
+    ld   r26,y+
+    ld   r30,y+
+    cp   r26,r30
+    brlt __cmax0
+    mov  r30,r26
+__cmax0:
+    ret
+#endasm
+}
+#pragma asm_function-
+
+#pragma asm_function+
+signed char cmin(signed char a,signed char b)
+{
+#asm
+    ld   r26,y+
+    ld   r30,y+
+    cp   r30,r26
+    brlt __cmin0
+    mov  r30,r26
+__cmin0:
+    ret
+#endasm
+}
+#pragma asm_function-
+
+#pragma asm_function+
+signed char csign(signed char x)
+{
+#asm
+    ld   r30,y+
+    cpi  r30,0
+    breq __csign0
+    brlt __csignm
+    ldi  r30,1
+    ret
+__csignm:
+    ldi  r30,-1
+__csign0:
+    ret
+#endasm
+}
+#pragma asm_function-
+
+#pragma asm_function+
+int max(int a,int b)
+{
+#ifdef _ENHANCED_CORE_
+#asm
+    ld   r26,y+
+    ld   r27,y+
+    ld   r30,y+
+    ld   r31,y+
+    cp   r26,r30
+    cpc  r27,r31
+    brlt __max0
+    movw r30,r26
+__max0:
+    ret
+#endasm
+#else
+#asm
+    ld   r26,y+
+    ld   r27,y+
+    ld   r30,y+
+    ld   r31,y+
+    cp   r26,r30
+    cpc  r27,r31
+    brlt __max0
+    mov  r30,r26
+    mov  r31,r27
+__max0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+int min(int a,int b)
+{
+#ifdef _ENHANCED_CORE_
+#asm
+    ld   r26,y+
+    ld   r27,y+
+    ld   r30,y+
+    ld   r31,y+
+    cp   r30,r26
+    cpc  r31,r27
+    brlt __min0
+    movw r30,r26
+__min0:
+    ret
+#endasm
+#else
+#asm
+    ld   r26,y+
+    ld   r27,y+
+    ld   r30,y+
+    ld   r31,y+
+    cp   r30,r26
+    cpc  r31,r27
+    brlt __min0
+    mov  r30,r26
+    mov  r31,r27
+__min0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+signed char sign(int x)
+{
+#ifdef _AVR8L_CORE_
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    subi r30,0
+    sbci r31,0
+    breq __sign0
+    brlt __signm
+    ldi  r30,1
+    rjmp __sign0
+__signm:
+    ldi   r30,-1
+__sign0:
+    ret
+#endasm
+#else
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    sbiw r30,0
+    breq __sign0
+    brlt __signm
+    ldi  r30,1
+    rjmp __sign0
+__signm:
+    ldi   r30,-1
+__sign0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+long lmax(long a,long b)
+{
+#ifdef _ENHANCED_CORE_
+#asm
+    ld    r26,y+
+    ld    r27,y+
+    ld    r24,y+
+    ld    r25,y+
+    ld    r30,y+
+    ld    r31,y+
+    ld    r22,y+
+    ld    r23,y+
+    cp    r26,r30
+    cpc   r27,r31
+    cpc   r24,r22
+    cpc   r25,r23
+    brlt  __lmax0
+    movw  r30,r26
+    movw  r22,r24
+__lmax0:
+    ret
+#endasm
+#else
+#asm
+    ld    r26,y+
+    ld    r27,y+
+    ld    r24,y+
+    ld    r25,y+
+    ld    r30,y+
+    ld    r31,y+
+    ld    r22,y+
+    ld    r23,y+
+    cp    r26,r30
+    cpc   r27,r31
+    cpc   r24,r22
+    cpc   r25,r23
+    brlt  __lmax0
+    mov   r30,r26
+    mov   r31,r27
+    mov   r22,r24
+    mov   r23,r25
+__lmax0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+    
+#pragma asm_function+
+long lmin(long a,long b)
+{
+#ifdef _ENHANCED_CORE_
+#asm
+    ld    r26,y+
+    ld    r27,y+
+    ld    r24,y+
+    ld    r25,y+
+    ld    r30,y+
+    ld    r31,y+
+    ld    r22,y+
+    ld    r23,y+
+    cp    r30,r26
+    cpc   r31,r27
+    cpc   r22,r24
+    cpc   r23,r25
+    brlt  __lmin0
+    movw  r30,r26
+    movw  r22,r24
+__lmin0:
+    ret
+#endasm
+#else
+#asm
+    ld    r26,y+
+    ld    r27,y+
+    ld    r24,y+
+    ld    r25,y+
+    ld    r30,y+
+    ld    r31,y+
+    ld    r22,y+
+    ld    r23,y+
+    cp    r30,r26
+    cpc   r31,r27
+    cpc   r22,r24
+    cpc   r23,r25
+    brlt  __lmin0
+    mov   r30,r26
+    mov   r31,r27
+    mov   r22,r24
+    mov   r23,r25
+__lmin0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+signed char lsign(long x)
+{
+#ifdef _AVR8L_CORE_
+#asm
+    clr  r30
+    ld   r26,y+
+    ld   r27,y+
+    ld   r24,y+
+    ld   r25,y+
+    subi r26,0
+    sbci r27,0
+    sbci r24,0
+    sbci r25,0
+    breq __lsign0
+    brlt __lsignm
+    ldi  r30,1
+    rjmp __lsign0
+__lsignm:
+    ldi  r30,-1
+__lsign0:
+    ret
+#endasm
+#else
+#asm
+    clr  r30
+    ld   r26,y+
+    ld   r27,y+
+    ld   r24,y+
+    ld   r25,y+
+    sbiw r26,0
+    sbci r24,0
+    sbci r25,0
+    breq __lsign0
+    brlt __lsignm
+    ldi  r30,1
+    rjmp __lsign0
+__lsignm:
+    ldi  r30,-1
+__lsign0:
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+    
+#pragma asm_function+
+unsigned char isqrt(unsigned int x)
+{
+#ifdef _AVR8L_CORE_
+#asm
+  ld   r26,y+
+  ld   r27,y+
+  clr	 r30
+	clr	 r16
+	ldi	 r22,0x80
+	clt
+__isqrt0:
+	mov	 r17,r22
+	lsr	 r17
+	ror	 r16
+	or	 r17,r30
+	brts __isqrt1
+	cp	 r26,r16
+	cpc	 r27,r17
+	brcs __isqrt2
+__isqrt1:
+	sub	 r26,r16
+	sbc	 r27,r17
+	or	 r30,r22
+__isqrt2:
+	bst	 r27,7
+	lsl	 r26
+	rol	 r27
+	lsr	 r22
+	brcc __isqrt0
+	ret
+#endasm
+#else
+#asm
+  ld   r26,y+
+  ld   r27,y+
+  clr	 r30
+	clr	 r0
+	ldi	 r22,0x80
+	clt
+__isqrt0:
+	mov	 r1,r22
+	lsr	 r1
+	ror	 r0
+	or	 r1,r30
+	brts __isqrt1
+	cp	 r26,r0
+	cpc	 r27,r1
+	brcs __isqrt2
+__isqrt1:
+	sub	 r26,r0
+	sbc	 r27,r1
+	or	 r30,r22
+__isqrt2:
+	bst	 r27,7
+	lsl	 r26
+	rol	 r27
+	lsr	 r22
+	brcc __isqrt0
+	ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+unsigned int lsqrt(unsigned long x)
+{
+#ifdef _AVR8L_CORE_
+#asm
+    push r20
+    push r21
+    ld   r26,y+
+    ld   r27,y+
+    ld   r24,y+
+    ld   r25,y+
+    clr  r16
+    clr  r17
+    clr  r20
+    clr  r21
+    clr  r22
+    ldi  r23,0x80
+    clr  r30
+    clr  r31
+    clt
+__lsqrt0:
+    mov  r20,r22
+    mov  r21,r23
+    lsr  r21
+    ror  r20
+    ror  r17
+    ror  r16
+    or   r20,r30
+    or   r21,r31
+    brts __lsqrt1
+    cp   r26,r16
+    cpc  r27,r17
+    cpc  r24,r20
+    cpc  r25,r21
+    brcs __lsqrt2
+__lsqrt1:
+    sub  r26,r16
+    sbc  r27,r17
+    sbc  r24,r20
+    sbc  r25,r21
+    or   r30,r22
+    or   r31,r23
+__lsqrt2:
+    bst  r25,7
+    lsl  r26
+    rol  r27
+    rol  r24
+    rol  r25
+    lsr  r23
+    ror  r22
+    brcc __lsqrt0
+    pop  r21
+    pop  r20
+    ret
+#endasm
+#else
+#asm
+    push r20
+    push r21
+    ld   r26,y+
+    ld   r27,y+
+    ld   r24,y+
+    ld   r25,y+
+    clr  r0
+    clr  r1
+    clr  r20
+    clr  r21
+    clr  r22
+    ldi  r23,0x80
+    clr  r30
+    clr  r31
+    clt
+__lsqrt0:
+#endasm
+#ifdef _ENHANCED_CORE_
+#asm
+    movw r20,r22
+#endasm
+#else
+#asm
+    mov  r20,r22
+    mov  r21,r23
+#endasm
+#endif
+#asm
+    lsr  r21
+    ror  r20
+    ror  r1
+    ror  r0
+    or   r20,r30
+    or   r21,r31
+    brts __lsqrt1
+    cp   r26,r0
+    cpc  r27,r1
+    cpc  r24,r20
+    cpc  r25,r21
+    brcs __lsqrt2
+__lsqrt1:
+    sub  r26,r0
+    sbc  r27,r1
+    sbc  r24,r20
+    sbc  r25,r21
+    or   r30,r22
+    or   r31,r23
+__lsqrt2:
+    bst  r25,7
+    lsl  r26
+    rol  r27
+    rol  r24
+    rol  r25
+    lsr  r23
+    ror  r22
+    brcc __lsqrt0
+    pop  r21
+    pop  r20
+    ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma asm_function+
+signed char fsign(float x)
+{
+#asm
+    ld   r30,y+
+    ld   r31,y+
+    ld   r22,y+
+    ld   r23,y+
+    or   r30,r31
+    or   r30,r22
+    or   r30,r23
+    breq __fsign0
+    ldi  r30,1
+    sbrc r23,7
+    ser  r30
+__fsign0:
+    ret
+#endasm
+}
+#pragma asm_function-
+
+#pragma dstack_par-
+
+float fmin(float a,float b)
+{
+if (a<b) return a;
+return b;
+}
+
+float fmax(float a,float b)
+{
+if (a>b) return a;
+return b;
+}
+
+#pragma dstack_par+
+
+#pragma asm_function+
+float ftrunc(float x)
+{
+#ifdef _AVR8L_CORE_
+#asm
+   subi r28,-3
+   ld   r23,y
+   ld   r22,-y
+   ld   r31,-y
+   ld   r30,-y
+   bst  r23,7
+   lsl  r23
+   sbrc r22,7
+   sbr  r23,1
+   mov  r25,r23
+   subi r25,0x7e
+   breq __ftrunc0
+   brcs __ftrunc0
+   cpi  r25,24
+   brsh __ftrunc1
+   clr  r26
+   clr  r27
+   clr  r24
+__ftrunc2:
+   sec
+   ror  r24
+   ror  r27
+   ror  r26
+   dec  r25
+   brne __ftrunc2
+   and  r30,r26
+   and  r31,r27
+   and  r22,r24
+   rjmp __ftrunc1
+__ftrunc0:
+   clt
+   clr  r23
+   clr  r30
+   clr  r31
+   clr  r22
+__ftrunc1:
+   cbr  r22,0x80
+   lsr  r23
+   brcc __ftrunc3
+   sbr  r22,0x80
+__ftrunc3:
+   bld  r23,7
+   ld   r26,y+
+   ld   r27,y+
+   ld   r24,y+
+   ld   r25,y+
+   cp   r30,r26
+   cpc  r31,r27
+   cpc  r22,r24
+   cpc  r23,r25
+   bst  r25,7
+   ret
+#endasm
+#else
+#asm
+   ldd  r23,y+3
+   ldd  r22,y+2
+   ldd  r31,y+1
+   ld   r30,y
+   bst  r23,7
+   lsl  r23
+   sbrc r22,7
+   sbr  r23,1
+   mov  r25,r23
+   subi r25,0x7e
+   breq __ftrunc0
+   brcs __ftrunc0
+   cpi  r25,24
+   brsh __ftrunc1
+   clr  r26
+   clr  r27
+   clr  r24
+__ftrunc2:
+   sec
+   ror  r24
+   ror  r27
+   ror  r26
+   dec  r25
+   brne __ftrunc2
+   and  r30,r26
+   and  r31,r27
+   and  r22,r24
+   rjmp __ftrunc1
+__ftrunc0:
+   clt
+   clr  r23
+   clr  r30
+   clr  r31
+   clr  r22
+__ftrunc1:
+   cbr  r22,0x80
+   lsr  r23
+   brcc __ftrunc3
+   sbr  r22,0x80
+__ftrunc3:
+   bld  r23,7
+   ld   r26,y+
+   ld   r27,y+
+   ld   r24,y+
+   ld   r25,y+
+   cp   r30,r26
+   cpc  r31,r27
+   cpc  r22,r24
+   cpc  r23,r25
+   bst  r25,7
+   ret
+#endasm
+#endif
+}
+#pragma asm_function-
+
+#pragma dstack_par-
+
+float floor(float x)
+{
+x=ftrunc(x);
+#asm
+    brne __floor1
+__floor0:
+#endasm
+return x;
+#asm
+__floor1:
+    brtc __floor0
+#endasm
+return x-1.0;
+}
+
+float ceil(float x)
+{
+x=ftrunc(x);
+#asm
+    brne __ceil1
+__ceil0:
+#endasm
+return x;
+#asm
+__ceil1:
+    brts __ceil0
+#endasm
+return x+1.0;
+}
+
+float fmod(float x,float y)
+{
+float d;
+if (y==0.0) return 0.0;
+d=x/y;
+if (d==0.0) return 0.0;
+if (d>0.0) d=floor(d); else d=ceil(d);
+return x-y*d;
+}
+
+float modf(float x,float *ipart)
+{
+if (x==0.0) return *ipart=0.0;
+if (x>0.0) *ipart=floor(x); else *ipart=ceil(x);
+return x-*ipart;
+}
+
+float log(float x)
+{   
+int expn;
+float x2;
+if (x<=0.0) return -HUGE_VAL;
+x=frexp(x,&expn);
+if (x<7.07106781e-1) {x+=x; expn-=1;};
+x=(x-1.0)/(x+1.0);
+x2=x*x;
+return x*(8.95540615e-1*x2-3.31355618)/(x2-1.65677798)+6.93147181e-1*expn;
+}
+
+float log10(float x)
+{
+if (x<=0.0) return -HUGE_VAL;
+return 4.34294482e-1*log(x);
+}
+
+float exp(float x)                            
+{      
+int expn;
+float fract,xsq;
+if (x<-87.33654475) return 0.0;
+if (x==0.0) return 1.0;
+if (x>88.72283905) return HUGE_VAL;
+x*=1.44269504;
+expn=floor(x);
+fract=x-expn-0.5;
+xsq=fract*fract;
+fract*=5.76900724e-2*xsq+7.21528915;
+xsq+=2.08189238e1;
+return ldexp(1.41421356*(xsq+fract)/(xsq-fract),expn);
+}
+
+float pow(float x,float y)
+{   
+long i;
+if (x==0.0) return 0.0;
+if (x>0.0)
+   {
+   if (y==0.0) return 1.0;
+   return exp(y*log(x));
+   };
+i=y;
+if ((float) i!=y) return 0.0;
+x=exp(y*log(-x));
+if ((i&1)==0) return x;
+return -x;
+}
+
+float sin(float x)
+{
+unsigned char neg=0;
+float x2;
+x*=0.5/PI;
+x-=floor(x);
+if (x>0.5) {x-=0.5; neg=1;};
+if (x>0.25) x=0.5-x;
+if (neg) x=-x;
+x2=x*x;
+return x*(x2*(4.16920823e1*x2-4.34737428e1)+8.27033637)/(x2*(x2+1.74160970)+1.31626492);
+}
+
+float cos(float x)
+{
+return sin(0.5*PI-x);
+}
+
+float tan(float x)
+{
+float c;
+if ((c=cos(x))==0.0)
+   {
+   if (x>0.0) return HUGE_VAL;
+   return -HUGE_VAL;
+   };
+return sin(x)/c;
+}
+
+float sinh(float x)
+{
+unsigned char neg=0;
+float t;
+if (x<0.0) {x=-x; neg=1;};
+x=exp(x);
+t=0.5*(x-1.0/x);
+if (neg) return -t;
+return t;
+}
+
+float cosh(float x)
+{
+x=exp(fabs(x));
+return 0.5*(x+1.0/x);
+}
+
+float tanh(float x)
+{
+unsigned char neg=0;
+float t;
+if (x<0.0) {x=-x; neg=1;};
+x=exp(x);
+t=1.0/x;
+t=(x-t)/(x+t);
+if (neg) return -t;
+return t;
+}
+
+float xatan(float x)
+{
+float x2;
+x2=x*x;
+return x*(6.36918871*x2+1.26599861e1)/(x2*(x2+1.05891113e1)+1.26599865e1);
+}
+
+float yatan(float x)
+{
+if (x<1.41421356-1.0) return xatan(x);
+if (x>1.41421356+1.0) return 0.5*PI-xatan(1.0/x);
+return 0.25*PI+xatan((x-1.0)/(x+1.0));
+}
+
+float asin(float x)
+{
+unsigned char neg=0;
+float t;
+if ((x<-1.0) || (x>1.0)) return HUGE_VAL;
+if (x<0.0) {x=-x; neg=1;};
+t=sqrt(1.0-x*x);
+if (x>7.07106781e-1) t=0.5*PI-yatan(t/x);
+else t=yatan(x/t);
+if (neg) return -t;
+return t;
+}
+
+float acos(float x)
+{
+if ((x<-1.0) || (x>1.0)) return HUGE_VAL;
+return 0.5*PI-asin(x);
+}
+
+float atan(float x)
+{
+if (x>=0.0) return yatan(x);
+return -yatan(-x);
+}
+
+float atan2(float y,float x)
+{
+float t;
+if (x==0.0)
+   {
+   if (y==0.0) return HUGE_VAL;
+   if (y>0.0) return 0.5*PI;
+   return -0.5*PI;
+   };
+t=y/x;
+if (x>0.0)
+   {
+   if (y>=0.0) return yatan(t);
+   return -yatan(-t);
+   };
+if (y>=0.0) return PI-yatan(-t);
+return -PI+yatan(t);
+}
+

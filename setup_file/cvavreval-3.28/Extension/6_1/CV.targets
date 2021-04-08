@@ -1,0 +1,27 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <!--The following line is the means by which the build system will invoke methods on the class CustomAssemblerTask-->
+<UsingTask TaskName="CVToolTask" AssemblyFile="CVBuildTargets.dll" />
+  <Target Name="CoreBuild">
+    <CVToolTask  Device = "$(avrdevice)" Configuration="$(Configuration)" ContentList ="@(Compile)"
+	ToolchainSettings="$(ToolchainSettings)" ToolchainName="$(ToolchainName)" 
+	ToolchainFlavour="$(ToolchainFlavour)" AvrToolName="$(avrtool)"/>	
+  </Target>
+  <Target Name="Clean">
+    <CVToolTask Clean="true" Device = "$(avrdevice)" Configuration="$(Configuration)" ContentList ="@(Compile)"
+	ToolchainSettings="$(ToolchainSettings)" ToolchainName="$(ToolchainName)"
+	ToolchainFlavour="$(ToolchainFlavour)" AvrToolName="$(avrtool)"/>
+  </Target>
+  <Target Name="CoreRebuild">
+    <CVToolTask Rebuild="true" Device = "$(avrdevice)" Configuration="$(Configuration)" ContentList ="@(Compile)"
+	ToolchainSettings="$(ToolchainSettings)" ToolchainName="$(ToolchainName)"
+	ToolchainFlavour="$(ToolchainFlavour)" AvrToolName="$(avrtool)"/>
+  </Target>
+  <Target Name="Compile">
+    <CVToolTask Compile="true" Device = "$(avrdevice)" Configuration="$(Configuration)" ContentList ="@(Compile)"
+	ToolchainSettings="$(ToolchainSettings)" ToolchainName="$(ToolchainName)" SelectedFiles="$(SelectedFiles)"
+	ToolchainFlavour="$(ToolchainFlavour)" AvrToolName="$(avrtool)"/>
+  </Target>
+  <Import Project="Avr.common.targets"/>
+</Project>
+

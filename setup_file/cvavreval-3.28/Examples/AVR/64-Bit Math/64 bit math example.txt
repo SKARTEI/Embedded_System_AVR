@@ -1,0 +1,18 @@
+64-bit integer math library example.
+
+(C) Copyright 2014-2015 Pavel Haiduc, HP InfoTech s.r.l.
+http://www.hpinfotech.com
+
+This example is designed to run on an Arduino UNO
+development board with an ATmega328P chip
+clocked at 16 MHz.
+
+The sensor output is transmitted serially at a
+Baud rate of 9600, 8N1 and can be displayed using
+the CodeVisionAVR IDE Tools|Terminal.
+  
+The program size exceeds the code size limit of the Evaluation
+version.
+In this case the pre-compiled executable from
+\Examples\AVR\64-Bit Math\Release\Exe\64 bit math example.hex 
+can be uploaded to the Arduino board.

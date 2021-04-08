@@ -1,0 +1,11 @@
+VERSION:3 SOURCE_TIMESTAMP:52887862
+NODE:I LEVEL:0 LINE:1 "D:\a_semester3_1\microprocessor\setup_file\cvavreval-3.28\inc\mega128.h"
+NODE:I LEVEL:0 LINE:2 "D:\a_semester3_1\microprocessor\setup_file\cvavreval-3.28\inc\delay.h"
+NODE:I LEVEL:0 LINE:3 "D:\a_semester3_1\microprocessor\setup_file\cvavreval-3.28\inc\stdlib.h"
+NODE:C LEVEL:0 LINE:5 "seg2_ten -> FLASH"
+NODE:C LEVEL:0 LINE:6 "seg_2end -> FLASH"
+NODE:V LEVEL:0 LINE:7 "led -> R4,R5"
+NODE:V LEVEL:0 LINE:7 "number -> R6,R7"
+NODE:F LEVEL:0 LINE:12 "main(void)"
+NODE:F LEVEL:0 LINE:53 "SEG2_basic(void)"
+NODE:F LEVEL:0 LINE:72 "SEG2_end(void)"
