@@ -1,0 +1,24 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+R_num                                                                             R5           1
+S_num                                                                             R4           1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+main                                                                              0x0009B     17
+LCD_IDLE                                                                          0x000AC      5
+USART_recieve                                                                     0x000B1     55
+LCD_init                                                                          0x000E8     22
+LCD_String                                                                        0x000FE     18
+Data                                                                              0x00115     15
+Busy                                                                              0x00124      4

@@ -1,0 +1,24 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+fval                                                                              0x0500       4
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+ival                                                                              R4,R5        2
+second                                                                            R6,R7        2
+i                                                                                 R8,R9        2
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+main                                                                              0x0007B     48
+AD_DS                                                                             0x000AB     49
+CHECK1                                                                            0x000DC     19
+CHECK2                                                                            0x000EF     16
+NEGLECT2                                                                          0x00101      7

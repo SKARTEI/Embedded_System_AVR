@@ -1,0 +1,44 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+fval                                                                              0x0500       4
+R_num                                                                             0x0504       1
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+ival                                                                              R4,R5        2
+state_flag                                                                        R6,R7        2
+timer_counting                                                                    R8,R9        2
+First_desti                                                                       R10,R11      2
+Second_desti                                                                      R12,R13      2
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+main                                                                              0x0013F    136
+IR_recheck                                                                        0x001C7     31
+destination_recieve                                                               0x001E6    280
+AD_DS                                                                             0x002FE     47
+LOAD_CHECK                                                                        0x0032D     28
+FRONTBACK_CHECK                                                                   0x00349     34
+waiting                                                                           0x0036B     63
+initial_go                                                                        0x003AA      4
+initial_back                                                                      0x003AE      4
+move_go                                                                           0x003B2     35
+move_back                                                                         0x003D5     49
+straight_1                                                                        0x00406     15
+left_1                                                                            0x00415     13
+right_1                                                                           0x00422     13
+backward_1                                                                        0x0042F     19
+NEGLECT                                                                           0x00442      5
+LCD_IDLE                                                                          0x00447     10
+LCD_mov                                                                           0x00451      6
+LCD_init                                                                          0x00457     22
+LCD_String                                                                        0x0046D     18
+Data                                                                              0x00484     15
+Busy                                                                              0x00493      4

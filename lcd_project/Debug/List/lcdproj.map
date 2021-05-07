@@ -1,0 +1,27 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+fval                                                                              0x0500       4
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+ival                                                                              R4,R5        2
+flag                                                                              R6,R7        2
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+main                                                                              0x000BC     52
+AD_DS                                                                             0x000F0     49
+COMPLETE                                                                          0x00136      4
+FAIL                                                                              0x0013A      4
+LCD_IDLE                                                                          0x0013E     10
+LCD_init                                                                          0x00148     22
+LCD_String                                                                        0x0015E     18
+Data                                                                              0x00175     15
+Busy                                                                              0x00184      4
